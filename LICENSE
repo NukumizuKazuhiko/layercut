@@ -1,5 +1,5 @@
-LayerCut 商用告知许可（LCNL）1.0
-LayerCut Commercial Notice License (LCNL) 1.0
+LayerCut 商用告知许可（LCNL）1.1
+LayerCut Commercial Notice License (LCNL) 1.1
 
 版权所有 (c) 2026 NukumizuKazuhiko
 Copyright (c) 2026 NukumizuKazuhiko
@@ -14,6 +14,14 @@ authentic. In case of ambiguity, the Chinese text prevails.
 
 "本软件" 指 LayerCut 的源代码、可执行文件及其文档。
 "原作者" 指上述版权持有人 NukumizuKazuhiko。
+"接收者" 指依本许可获得本软件、其修改版、产出文件或其副本的任何
+个人或组织。
+"修改版" 指在本软件基础上修订、翻译、增补或以其他方式衍生出的作品；
+但与本软件或其修改版相分离的独立作品，或仅与其接口（或按名称绑定）
+的作品，不属于修改版，无论该独立作品自身是否构成演绎作品。
+"源码形式" 指进行修改时首选的便于修改的形式（即源代码）；
+"目标码形式" 指源码形式以外的任何形式，包括但不限于编译产物、
+可执行文件与打包文件。
 "产出文件" 指由本软件或其修改版直接或间接生成、导出或渲染的任何文件，
 包括但不限于导出的图像（PNG 等）、矢量图（SVG 等）与工程文件；
 参照 Apache-2.0 对 "Derivative Works" 的排除性定义，本定义有意将
@@ -29,13 +37,65 @@ authentic. In case of ambiguity, the Chinese text prevails.
 "贡献者" 指原作者以及向本软件提交代码、文档、图标或其他修改内容的任何主体；
 其"贡献"指其提交的此类内容。
 
-二、授权
+I. Definitions
 
-在遵守第三条（唯一条件）的前提下，任何个人或组织可以免费、永久、
-不可撤销地使用、复制、修改、合并、发布、分发、再许可及销售本软件
-及其修改版，包括上述全部商业性使用场景。
+"Software" means the LayerCut source code, binaries and documentation.
+"Author" means the copyright holder NukumizuKazuhiko.
+"Recipient" means any person or organization that obtains the Software,
+a modified version, Output Files or copies thereof under this license.
+"Modified Version" means any work derived from the Software by way of
+revision, translation, augmentation or otherwise; works that are
+separate from the Software or modified versions, or that merely
+interface (or bind by name) to them, are not Modified Versions,
+regardless of whether such separate works constitute derivative works
+in themselves.
+"Source form" means the preferred form for making modifications
+(i.e., source code); "Object form" means any form other than Source
+form, including compiled artifacts, executables and packages.
+"Output Files" means any file directly or indirectly generated, exported
+or rendered by the Software or a modified version, including but not
+limited to exported images (PNG etc.), vector graphics (SVG etc.) and
+project files. Following the drafting style of Apache-2.0's "Derivative
+Works" definition, this definition deliberately brings such outputs
+within the scope of this license, whereas Apache-2.0 excludes them.
+"Commercial Use" means any of the following:
+  (a) providing a network service with the Software or a Modified
+      Version (including SaaS, online tools, APIs);
+  (b) making the Software or a Modified Version into a commercial
+      product that is sold or offered for a fee;
+  (c) distributing the Software or a Modified Version bundled with,
+      given away with, or packaged as part of other commercial goods
+      or services;
+  (d) using Output Files produced by the Software or a Modified Version
+      for commercial purposes, including but not limited to selling the
+      Output Files, incorporating them into commercial goods or
+      services, or using them in for-profit production activities
+      (such as physical fabrication, printing or cutting work sold
+      afterwards).
+"Notice" means an email to the Author at: mihoyostart@gmail.com.
+"Contributor" means the Author and any person or organization that
+submits code, documentation, icons or other modifications to the
+Software; a "Contribution" means such submitted content.
 
-三、唯一条件：商用告知
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+二、版权授权
+
+在遵守第三条（商用告知）与第五条（再分发条件）的前提下，任何个人或
+组织可以免费、永久、不可撤销地使用、复制、修改、合并、发布、分发、
+再许可及销售本软件及其修改版，包括全部商业性使用场景。
+
+II. Copyright Grant
+
+Subject to Section III (Commercial Notice) and Section V
+(Redistribution Conditions), any person or organization may use, copy,
+modify, merge, publish, distribute, sublicense and sell the Software
+and Modified Versions, free of charge, perpetually and irrevocably —
+including every Commercial Use scenario.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+三、商用告知（使用条件）
 
 3.1 开始任一商业性使用之时，使用者应以"告知"通知原作者，内容仅需包含：
     使用主体（个人或组织）名称、使用形式（对应上述 a/b/c/d）、开始时间。
@@ -46,76 +106,7 @@ authentic. In case of ambiguity, the Chinese text prevails.
     均不影响使用的合法性。
 3.3 非商业性的个人学习、研究、内部评估与本地使用，无需告知。
 
-四、专利授权
-
-4.1 在遵守本许可的前提下，每位贡献者就其可授权的专利权利要求，向每位
-    本软件的接收者授予永久性、全球性、非排他性、免费、不可撤销
-    （本条 4.2 规定的情形除外）的专利许可，允许制造、委托制造、使用、
-    许诺销售、销售、进口及以其他方式转移本软件、其修改版及产出文件。
-    前述"可授权的专利权利要求"指该贡献者拥有或实际控制的、可由其
-    授权的专利权利要求中，被其贡献单独、或其贡献与本软件的组合
-    必然侵犯的那部分权利要求。
-4.2 专利诉讼终止：若任何人就本软件、其修改版、产出文件或任何贡献
-    侵犯专利权而提起诉讼（包括在该诉讼中的反诉或交叉诉讼中提出
-    专利权利主张），则依本条授予该提起诉讼之主体的专利许可，
-    自其起诉之日起终止。专利许可的终止不影响该主体依本许可
-    其他条款获得的版权及其他权利。
-4.3 为明确起见：本条授予的专利许可不延伸至与本软件及其修改版分离的
-    独立作品，或仅与本软件接口（或按名称绑定）的独立作品。
-
-五、保留声明
-
-任何再分发（无论是否修改、以何种形式）须随附本许可全文及上述版权声明。
-本许可不授予"LayerCut"名称与项目标识的商标使用权；告知不构成商标授权。
-
-六、免责声明
-
-本软件按"现状"提供，不附带任何明示或默示的担保（包括但不限于适销性、
-特定用途适用性与不侵权）。作者不对因使用本软件而产生的任何索赔、损害
-或其他责任负责。
-
-七、版本与变更
-
-原作者可以发布本许可的新版本；已依本版本开始的使用，可继续遵循其开始
-时所适用的版本条款。
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-I. Definitions
-
-"Software" means the LayerCut source code, binaries and documentation.
-"Author" means the copyright holder NukumizuKazuhiko.
-"Output Files" means any file directly or indirectly generated, exported
-or rendered by the Software or a modified version, including but not
-limited to exported images (PNG etc.), vector graphics (SVG etc.) and
-project files. Following the drafting style of Apache-2.0's "Derivative
-Works" definition, this definition deliberately brings such outputs
-within the scope of this license, whereas Apache-2.0 excludes them.
-"Commercial Use" means any of the following:
-  (a) providing a network service with the Software or a modified version
-      (including SaaS, online tools, APIs);
-  (b) making the Software or a modified version into a commercial product
-      that is sold or offered for a fee;
-  (c) distributing the Software or a modified version bundled with, given
-      away with, or packaged as part of other commercial goods or services;
-  (d) using Output Files produced by the Software or a modified version
-      for commercial purposes, including but not limited to selling the
-      Output Files, incorporating them into commercial goods or services,
-      or using them in for-profit production activities (such as physical
-      fabrication, printing or cutting work sold afterwards).
-"Notice" means an email to the Author at: mihoyostart@gmail.com.
-"Contributor" means the Author and any person or organization that
-submits code, documentation, icons or other modifications to the
-Software; a "Contribution" means such submitted content.
-
-II. Grant
-
-Subject to the sole condition in Section III, any person or organization
-may use, copy, modify, merge, publish, distribute, sublicense and sell the
-Software and modified versions, free of charge, perpetually and
-irrevocably — including every Commercial Use scenario above.
-
-III. Sole Condition: Commercial Notice
+III. Commercial Notice (Condition on Use)
 
 3.1 Upon starting any Commercial Use, the user shall send a Notice to the
     Author, containing only: the name of the user (person/organization),
@@ -130,45 +121,202 @@ III. Sole Condition: Commercial Notice
 3.3 Non-commercial personal study, research, internal evaluation and
     local use do not require a Notice.
 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+四、专利授权
+
+4.1 在遵守本许可的前提下，每位贡献者就其可授权的专利权利要求，向每位
+    接收者授予永久性、全球性、非排他性、免费、不可撤销
+    （本条 4.2 规定的情形除外）的专利许可，允许制造、委托制造、使用、
+    许诺销售、销售、进口及以其他方式转移本软件、其修改版及产出文件。
+    前述"可授权的专利权利要求"指该贡献者拥有或实际控制的、可由其
+    授权的专利权利要求中，被其贡献单独、或其贡献与本软件的组合
+    必然侵犯的那部分权利要求。
+4.2 专利诉讼终止：若任何人就本软件、其修改版、产出文件或任何贡献
+    侵犯专利权而提起诉讼（包括在该诉讼中的反诉或交叉诉讼中提出
+    专利权利主张），则依本条授予该提起诉讼之主体的专利许可，
+    自其起诉之日起终止。专利许可的终止不影响该主体依本许可
+    其他条款获得的版权及其他权利。
+4.3 为明确起见：本条授予的专利许可不延伸至与本软件及其修改版分离的
+    独立作品，或仅与本软件接口（或按名称绑定）的独立作品。
+
 IV. Patent License
 
 4.1 Subject to the terms of this license, each Contributor grants every
-    recipient of the Software a perpetual, worldwide, non-exclusive,
-    no-charge, royalty-free, irrevocable (except as stated in 4.2)
-    patent license to make, have made, use, offer to sell, sell,
-    import, and otherwise transfer the Software, modified versions and
-    Output Files. "Licensable patent claims" means patent claims owned
-    or controlled by that Contributor, licensable by them, that are
-    necessarily infringed by their Contribution alone, or by
-    combination of their Contribution with the Software.
+    Recipient a perpetual, worldwide, non-exclusive, no-charge,
+    royalty-free, irrevocable (except as stated in 4.2) patent license
+    to make, have made, use, offer to sell, sell, import, and otherwise
+    transfer the Software, Modified Versions and Output Files.
+    "Licensable patent claims" means patent claims owned or controlled
+    by that Contributor, licensable by them, that are necessarily
+    infringed by their Contribution alone, or by combination of their
+    Contribution with the Software.
 4.2 Termination for patent litigation: if any person institutes patent
     litigation against any entity (including a cross-claim or
-    counterclaim in a lawsuit) alleging that the Software, a modified
-    version, Output Files or any Contribution infringes a patent, the
+    counterclaim in a lawsuit) alleging that the Software, a Modified
+    Version, Output Files or any Contribution infringes a patent, the
     patent licenses granted to that person under this Section terminate
     as of the date the litigation is filed. Termination of the patent
     license does not affect the copyright or other rights such person
     holds under the other Sections of this license.
 4.3 For clarity: the patent license in this Section does not extend to
-    works that are separate from the Software and modified versions, or
+    works that are separate from the Software and Modified Versions, or
     that merely interface (or bind by name) to the Software.
 
-V. Notices
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Any redistribution (modified or not, in any form) must include the full
-text of this license and the copyright notice above. This license does
-not grant any trademark right in the name "LayerCut" or the project
-logos; sending a Notice does not constitute a trademark license.
+五、再分发条件
 
-VI. Disclaimer of Warranty
+任何人以源码形式或目标码形式再分发本软件或其修改版（无论是否修改），
+应满足以下全部条件：
+  (a) 向所有接收者随附本许可全文及上述版权声明；
+  (b) 使修改过的文件带有显著声明，表明你对其作出了修改；
+  (c) 以源码形式再分发时，保留源文件中的全部版权、专利、商标及
+      署名声明（与该修改版无关的声明除外）；
+  (d) 若本软件随附 "NOTICE" 文本文件，则再分发包含修改版时，应至少在
+      以下位置之一保留其中与该修改版相关的署名声明：随修改版分发的
+      NOTICE 文本、源文件、文档、或由再分发者生成的展示页面；
+      该义务仅在与署名声明相关的范围内持续；
+  (e) 你可以在你自己的修改版上附加你自己的版权声明，并可以就你的
+      修改按本许可或按更严格的自行条款提供（但不得限制本许可授予
+      接收者的权利）；
+  (f) 以目标码形式再分发时，上述 (c)(d) 所要求的声明应包含在随同
+      分发的文档或其他随附材料中。
+上述条件不改变第三条的效力：再分发本身若构成商业性使用（如销售、
+收费提供、商业捆绑），仍应按第三条告知。
+
+V. Redistribution Conditions
+
+Anyone redistributing the Software or a Modified Version, in Source
+form or Object form, with or without modification, shall meet all of
+the following conditions:
+  (a) give all recipients a copy of this License and the copyright
+      notice above;
+  (b) cause any modified files to carry prominent notices stating that
+      you changed them;
+  (c) when redistributing in Source form, retain in each source file
+      all copyright, patent, trademark and attribution notices,
+      excluding those that do not pertain to any part of the Modified
+      Version;
+  (d) if the Software ships with a "NOTICE" text file, retain the
+      attribution notices within that Notice file that pertain to the
+      Modified Version, in at least one of the following places: within
+      a NOTICE text file distributed with the Modified Version, within
+      the source files, within the documentation, and/or generated
+      display pages of the redistributor; such notices remain for as
+      long as they pertain;
+  (e) you may add your own copyright statement to your Modified
+      Versions, and may license your modifications under this license
+      or under your own stricter terms (provided you do not restrict
+      the rights granted to recipients under this license);
+  (f) when redistributing in Object form, the notices required by (c)
+      and (d) shall be included in the accompanying documentation or
+      other materials distributed with it.
+These conditions do not affect Section III: if the redistribution itself
+constitutes a Commercial Use (such as selling, offering for a fee, or
+commercial bundling), a Notice under Section III is still required.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+六、贡献提交
+
+除提交时明确声明附加条款者外，任何人向本软件提交的贡献（包括
+pull request、补丁、issue 中附带的代码、文档与图标等），即视为该
+贡献者同时向原作者及所有接收者依本许可（含第四条专利授权）授权
+使用、复制、修改、再分发该贡献。原作者可在不改变本许可的前提下
+将这些贡献并入本软件。
+
+VI. Submission of Contributions
+
+Unless the contributor explicitly states additional terms at submission
+time, any Contribution submitted to the Software (including pull
+requests, patches, code attached to issues, documentation and icons)
+constitutes the contributor's grant to the Author and all Recipients of
+the rights to use, copy, modify and redistribute that Contribution under
+this license (including the patent license in Section IV). The Author
+may incorporate such Contributions into the Software without altering
+this license.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+七、商标
+
+本许可不授予 "LayerCut" 名称与项目标识的商标使用权；依第三条发出的
+告知不构成商标授权。以合理方式说明来源所必需的叙述性使用除外。
+
+VII. Trademarks
+
+This license does not grant any trademark right in the name "LayerCut"
+or the project logos; a Notice under Section III does not constitute a
+trademark license. Descriptive nominal uses necessary to indicate the
+source are excepted.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+八、接受保修或附加责任
+
+在依第五条再分发本软件时，你可以选择就你的再分发收取费用，并提供
+保修、支持、赔偿或其他责任义务。此类提供完全由你自行承担：你须就
+你所提供的每一项此类承诺为原作者与全体贡献者免责，并同意原作者与
+贡献者不对你的此类承诺承担任何责任。
+
+VIII. Accepting Warranty or Additional Liability
+
+While redistributing the Software under Section V, you may choose to
+charge a fee and offer warranty, support, indemnity or other liability
+obligations. Such offers are entirely your own responsibility: you shall
+indemnify the Author and every Contributor for each such commitment you
+make, and agree that the Author and Contributors are not liable for
+your offers.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+九、免责声明
+
+本软件按"现状"提供，不附带任何明示或默示的担保（包括但不限于
+适销性、特定用途适用性与不侵权）。因使用本软件而产生的任何风险
+由接收者自行承担。
+
+IX. Disclaimer of Warranty
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
-SOFTWARE.
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS
+WITH THE RECIPIENT.
 
-VII. Versions
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+十、责任限制
+
+在任何情形下、且无论任何诉因（包括但不限于侵权、合同或其他），
+原作者与贡献者均不对因使用或无法使用本软件而产生的任何直接、间接、
+特殊、附带、惩罚性或后果性损害承担责任（包括但不限于数据丢失、
+利润损失或业务中断），即使其已被告知此类损害发生的可能性。
+部分司法辖区不允许排除默示担保或限制特定损害，本条在该等辖区内在
+法律允许的最大范围内适用。
+
+X. Limitation of Liability
+
+IN NO EVENT AND UNDER NO LEGAL THEORY (INCLUDING TORT, CONTRACT OR
+OTHERWISE) SHALL THE AUTHOR OR ANY CONTRIBUTOR BE LIABLE FOR ANY
+DIRECT, INDIRECT, SPECIAL, INCIDENTAL, PUNITIVE OR CONSEQUENTIAL
+DAMAGES OF ANY CHARACTER (INCLUDING WITHOUT LIMITATION DATA LOSS,
+LOST PROFITS OR BUSINESS INTERRUPTION) ARISING FROM THE USE OF OR
+INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES. SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OF IMPLIED
+WARRANTIES OR THE LIMITATION OF CERTAIN DAMAGES; IN SUCH
+JURISDICTIONS THIS SECTION APPLIES TO THE FULLEST EXTENT PERMITTED BY
+LAW.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+十一、版本与变更
+
+原作者可以发布本许可的新版本；已依本版本开始的使用，可继续遵循其开始
+时所适用的版本条款。
+
+XI. Versions
 
 The Author may publish new versions of this license. Use that has begun
 under this version may continue under the version applicable at the time
