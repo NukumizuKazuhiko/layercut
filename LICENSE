@@ -26,6 +26,8 @@ authentic. In case of ambiguity, the Chinese text prevails.
       销售产出文件、将其作为商业商品或服务的组成部分、或将其用于
       盈利性的生产经营活动（如实体制作、印刷、切割加工后出售）。
 "告知" 指向原作者发出的电子邮件，发送至：mihoyostart@gmail.com。
+"贡献者" 指原作者以及向本软件提交代码、文档、图标或其他修改内容的任何主体；
+其"贡献"指其提交的此类内容。
 
 二、授权
 
@@ -44,18 +46,35 @@ authentic. In case of ambiguity, the Chinese text prevails.
     均不影响使用的合法性。
 3.3 非商业性的个人学习、研究、内部评估与本地使用，无需告知。
 
-四、保留声明
+四、专利授权
+
+4.1 在遵守本许可的前提下，每位贡献者就其可授权的专利权利要求，向每位
+    本软件的接收者授予永久性、全球性、非排他性、免费、不可撤销
+    （本条 4.2 规定的情形除外）的专利许可，允许制造、委托制造、使用、
+    许诺销售、销售、进口及以其他方式转移本软件、其修改版及产出文件。
+    前述"可授权的专利权利要求"指该贡献者拥有或实际控制的、可由其
+    授权的专利权利要求中，被其贡献单独、或其贡献与本软件的组合
+    必然侵犯的那部分权利要求。
+4.2 专利诉讼终止：若任何人就本软件、其修改版、产出文件或任何贡献
+    侵犯专利权而提起诉讼（包括在该诉讼中的反诉或交叉诉讼中提出
+    专利权利主张），则依本条授予该提起诉讼之主体的专利许可，
+    自其起诉之日起终止。专利许可的终止不影响该主体依本许可
+    其他条款获得的版权及其他权利。
+4.3 为明确起见：本条授予的专利许可不延伸至与本软件及其修改版分离的
+    独立作品，或仅与本软件接口（或按名称绑定）的独立作品。
+
+五、保留声明
 
 任何再分发（无论是否修改、以何种形式）须随附本许可全文及上述版权声明。
 本许可不授予"LayerCut"名称与项目标识的商标使用权；告知不构成商标授权。
 
-五、免责声明
+六、免责声明
 
 本软件按"现状"提供，不附带任何明示或默示的担保（包括但不限于适销性、
 特定用途适用性与不侵权）。作者不对因使用本软件而产生的任何索赔、损害
 或其他责任负责。
 
-六、版本与变更
+七、版本与变更
 
 原作者可以发布本许可的新版本；已依本版本开始的使用，可继续遵循其开始
 时所适用的版本条款。
@@ -85,6 +104,9 @@ within the scope of this license, whereas Apache-2.0 excludes them.
       or using them in for-profit production activities (such as physical
       fabrication, printing or cutting work sold afterwards).
 "Notice" means an email to the Author at: mihoyostart@gmail.com.
+"Contributor" means the Author and any person or organization that
+submits code, documentation, icons or other modifications to the
+Software; a "Contribution" means such submitted content.
 
 II. Grant
 
@@ -108,14 +130,37 @@ III. Sole Condition: Commercial Notice
 3.3 Non-commercial personal study, research, internal evaluation and
     local use do not require a Notice.
 
-IV. Notices
+IV. Patent License
+
+4.1 Subject to the terms of this license, each Contributor grants every
+    recipient of the Software a perpetual, worldwide, non-exclusive,
+    no-charge, royalty-free, irrevocable (except as stated in 4.2)
+    patent license to make, have made, use, offer to sell, sell,
+    import, and otherwise transfer the Software, modified versions and
+    Output Files. "Licensable patent claims" means patent claims owned
+    or controlled by that Contributor, licensable by them, that are
+    necessarily infringed by their Contribution alone, or by
+    combination of their Contribution with the Software.
+4.2 Termination for patent litigation: if any person institutes patent
+    litigation against any entity (including a cross-claim or
+    counterclaim in a lawsuit) alleging that the Software, a modified
+    version, Output Files or any Contribution infringes a patent, the
+    patent licenses granted to that person under this Section terminate
+    as of the date the litigation is filed. Termination of the patent
+    license does not affect the copyright or other rights such person
+    holds under the other Sections of this license.
+4.3 For clarity: the patent license in this Section does not extend to
+    works that are separate from the Software and modified versions, or
+    that merely interface (or bind by name) to the Software.
+
+V. Notices
 
 Any redistribution (modified or not, in any form) must include the full
 text of this license and the copyright notice above. This license does
 not grant any trademark right in the name "LayerCut" or the project
 logos; sending a Notice does not constitute a trademark license.
 
-V. Disclaimer of Warranty
+VI. Disclaimer of Warranty
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A
@@ -123,7 +168,7 @@ PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
 SOFTWARE.
 
-VI. Versions
+VII. Versions
 
 The Author may publish new versions of this license. Use that has begun
 under this version may continue under the version applicable at the time
