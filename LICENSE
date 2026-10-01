@@ -1,0 +1,107 @@
+LayerCut 商用告知许可（LCNL）1.0
+LayerCut Commercial Notice License (LCNL) 1.0
+
+版权所有 (c) 2026 NukumizuKazuhiko
+Copyright (c) 2026 NukumizuKazuhiko
+
+本许可为中英双语，两种文本具有同等效力；如有歧义，以中文文本为准。
+This license is bilingual (Chinese and English); both texts are equally
+authentic. In case of ambiguity, the Chinese text prevails.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+一、定义
+
+"本软件" 指 LayerCut 的源代码、可执行文件及其文档。
+"原作者" 指上述版权持有人 NukumizuKazuhiko。
+"商业性使用" 指下列任一行为：
+  (a) 以本软件或其修改版对外提供网络服务（包括但不限于 SaaS、在线工具、API）；
+  (b) 将本软件或其修改版制作成商业产品进行销售或收费提供；
+  (c) 将本软件或其修改版随其他具有商业性质的商品或服务一并赠送、捆绑或打包分发。
+"告知" 指向原作者发出的电子邮件，发送至：mihoyostart@gmail.com。
+
+二、授权
+
+在遵守第三条（唯一条件）的前提下，任何个人或组织可以免费、永久、
+不可撤销地使用、复制、修改、合并、发布、分发、再许可及销售本软件
+及其修改版，包括上述全部商业性使用场景。
+
+三、唯一条件：商用告知
+
+3.1 开始任一商业性使用之时，使用者应以"告知"通知原作者，内容仅需包含：
+    使用主体（个人或组织）名称、使用形式（对应上述 a/b/c）、开始时间。
+3.2 告知为同步义务：告知一经发出即视为条件满足并同步生效；
+    无需等待原作者确认、回复或许可。原作者未回复、拒绝回复或不同意，
+    均不影响使用的合法性。
+3.3 非商业性的个人学习、研究、内部评估与本地使用，无需告知。
+
+四、保留声明
+
+任何再分发（无论是否修改、以何种形式）须随附本许可全文及上述版权声明。
+本许可不授予"LayerCut"名称与项目标识的商标使用权；告知不构成商标授权。
+
+五、免责声明
+
+本软件按"现状"提供，不附带任何明示或默示的担保（包括但不限于适销性、
+特定用途适用性与不侵权）。作者不对因使用本软件而产生的任何索赔、损害
+或其他责任负责。
+
+六、版本与变更
+
+原作者可以发布本许可的新版本；已依本版本开始的使用，可继续遵循其开始
+时所适用的版本条款。
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+I. Definitions
+
+"Software" means the LayerCut source code, binaries and documentation.
+"Author" means the copyright holder NukumizuKazuhiko.
+"Commercial Use" means any of the following:
+  (a) providing a network service with the Software or a modified version
+      (including SaaS, online tools, APIs);
+  (b) making the Software or a modified version into a commercial product
+      that is sold or offered for a fee;
+  (c) distributing the Software or a modified version bundled with, given
+      away with, or packaged as part of other commercial goods or services.
+"Notice" means an email to the Author at: mihoyostart@gmail.com.
+
+II. Grant
+
+Subject to the sole condition in Section III, any person or organization
+may use, copy, modify, merge, publish, distribute, sublicense and sell the
+Software and modified versions, free of charge, perpetually and
+irrevocably — including every Commercial Use scenario above.
+
+III. Sole Condition: Commercial Notice
+
+3.1 Upon starting any Commercial Use, the user shall send a Notice to the
+    Author, containing only: the name of the user (person/organization),
+    the form of use (a/b/c above), and the start date.
+3.2 The Notice is a synchronous obligation: it takes effect upon sending.
+    No confirmation, reply or permission from the Author is required; the
+    Author's lack of reply or disagreement does not affect the legality
+    of the use.
+3.3 Non-commercial personal study, research, internal evaluation and
+    local use do not require a Notice.
+
+IV. Notices
+
+Any redistribution (modified or not, in any form) must include the full
+text of this license and the copyright notice above. This license does
+not grant any trademark right in the name "LayerCut" or the project
+logos; sending a Notice does not constitute a trademark license.
+
+V. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE
+SOFTWARE.
+
+VI. Versions
+
+The Author may publish new versions of this license. Use that has begun
+under this version may continue under the version applicable at the time
+it began.

@@ -58,6 +58,15 @@ npm run app:build  # 桌面版构建
 
 要求现代浏览器 / WebView2（Chrome / Edge 最佳）。
 
+## 许可 / License
+
+采用自研的 **LayerCut 商用告知许可（LCNL）1.0**（见 [LICENSE](./LICENSE)），要点：
+
+- 免费使用、修改、再分发，**允许一切商用**（网络服务 / 商业产品售卖 / 随商品赠送）
+- **唯一条件**：开始商用之时发送一封电子邮件告知原作者（地址见 LICENSE），同步生效——**无需原作者确认**
+- 非商业性的个人学习与本地使用无需告知；再分发须保留本许可全文
+- 详见 LICENSE 文件（中英双语，以中文为准）
+
 ## 技术栈
 
 Vite · React 18 · TypeScript · Konva.js（react-konva）· zustand · JSZip
