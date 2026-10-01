@@ -56,6 +56,8 @@ npm run app:build  # 桌面版构建
 
 桌面版使用系统 WebView2（Windows 11 自带），安装包体积小，无需打包 Chromium。窗口配置 `dragDropEnabled: false` 以保留 HTML5 原生拖放导入；导出的「选择文件夹」依赖 WebView2 的 File System Access API，不可用时自动回退 ZIP 下载。构建需要 Rust (MSVC) 工具链。
 
+桌面启动依赖正式构建的 `custom-protocol` feature。Vite 将 `paper` 的运行时入口统一映射到 `paper/dist/paper-core.js`：本项目只使用 JavaScript 矢量 API，不使用 PaperScript。默认的 `paper-full` 会在初始化时动态编译 PaperScript，被桌面 CSP 拦截后导致首页黑屏；保持当前 CSP 并使用 core 构建即可避免该初始化错误。修改构建配置后须重新执行 `npm run app:build`，已有 exe 不会自动更新。
+
 要求现代浏览器 / WebView2（Chrome / Edge 最佳）。
 
 ## 许可 / License

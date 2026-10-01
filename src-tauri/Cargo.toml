@@ -15,6 +15,16 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 
+# `custom-protocol` must be selectable as a feature: `tauri`'s build script
+# derives its `dev` cfg from `dev = !custom_protocol`, and the `dev` cfg decides
+# whether the window is pointed at `devUrl` (http://localhost:5173) or at the
+# bundled assets over `tauri://localhost`. The Tauri CLI turns this feature on
+# for production builds; declaring it here is what makes `tauri build` produce
+# a self-contained binary instead of one that loads the (absent) dev server and
+# shows a black window.
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
 [profile.release]
 codegen-units = 1
 lto = true
