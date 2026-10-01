@@ -14,10 +14,17 @@ authentic. In case of ambiguity, the Chinese text prevails.
 
 "本软件" 指 LayerCut 的源代码、可执行文件及其文档。
 "原作者" 指上述版权持有人 NukumizuKazuhiko。
+"产出文件" 指由本软件或其修改版直接或间接生成、导出或渲染的任何文件，
+包括但不限于导出的图像（PNG 等）、矢量图（SVG 等）与工程文件；
+参照 Apache-2.0 对 "Derivative Works" 的排除性定义，本定义有意将
+此类产出物纳入许可范围（Apache-2.0 第三条则将其排除在外）。
 "商业性使用" 指下列任一行为：
   (a) 以本软件或其修改版对外提供网络服务（包括但不限于 SaaS、在线工具、API）；
   (b) 将本软件或其修改版制作成商业产品进行销售或收费提供；
-  (c) 将本软件或其修改版随其他具有商业性质的商品或服务一并赠送、捆绑或打包分发。
+  (c) 将本软件或其修改版随其他具有商业性质的商品或服务一并赠送、捆绑或打包分发；
+  (d) 将本软件或其修改版所生产的产出文件用于商业用途，包括但不限于
+      销售产出文件、将其作为商业商品或服务的组成部分、或将其用于
+      盈利性的生产经营活动（如实体制作、印刷、切割加工后出售）。
 "告知" 指向原作者发出的电子邮件，发送至：mihoyostart@gmail.com。
 
 二、授权
@@ -29,7 +36,9 @@ authentic. In case of ambiguity, the Chinese text prevails.
 三、唯一条件：商用告知
 
 3.1 开始任一商业性使用之时，使用者应以"告知"通知原作者，内容仅需包含：
-    使用主体（个人或组织）名称、使用形式（对应上述 a/b/c）、开始时间。
+    使用主体（个人或组织）名称、使用形式（对应上述 a/b/c/d）、开始时间。
+    就第 (d) 项而言，"开始之时" 指产出文件首次被用于商业用途之时；
+    同一使用者就同一种使用形式只需告知一次。
 3.2 告知为同步义务：告知一经发出即视为条件满足并同步生效；
     无需等待原作者确认、回复或许可。原作者未回复、拒绝回复或不同意，
     均不影响使用的合法性。
@@ -57,13 +66,24 @@ I. Definitions
 
 "Software" means the LayerCut source code, binaries and documentation.
 "Author" means the copyright holder NukumizuKazuhiko.
+"Output Files" means any file directly or indirectly generated, exported
+or rendered by the Software or a modified version, including but not
+limited to exported images (PNG etc.), vector graphics (SVG etc.) and
+project files. Following the drafting style of Apache-2.0's "Derivative
+Works" definition, this definition deliberately brings such outputs
+within the scope of this license, whereas Apache-2.0 excludes them.
 "Commercial Use" means any of the following:
   (a) providing a network service with the Software or a modified version
       (including SaaS, online tools, APIs);
   (b) making the Software or a modified version into a commercial product
       that is sold or offered for a fee;
   (c) distributing the Software or a modified version bundled with, given
-      away with, or packaged as part of other commercial goods or services.
+      away with, or packaged as part of other commercial goods or services;
+  (d) using Output Files produced by the Software or a modified version
+      for commercial purposes, including but not limited to selling the
+      Output Files, incorporating them into commercial goods or services,
+      or using them in for-profit production activities (such as physical
+      fabrication, printing or cutting work sold afterwards).
 "Notice" means an email to the Author at: mihoyostart@gmail.com.
 
 II. Grant
@@ -77,7 +97,10 @@ III. Sole Condition: Commercial Notice
 
 3.1 Upon starting any Commercial Use, the user shall send a Notice to the
     Author, containing only: the name of the user (person/organization),
-    the form of use (a/b/c above), and the start date.
+    the form of use (a/b/c/d above), and the start date. For item (d),
+    "upon starting" means when the Output Files are first used for
+    commercial purposes; the same user needs to send a Notice only once
+    per form of use.
 3.2 The Notice is a synchronous obligation: it takes effect upon sending.
     No confirmation, reply or permission from the Author is required; the
     Author's lack of reply or disagreement does not affect the legality
