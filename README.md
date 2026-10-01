@@ -54,7 +54,7 @@ npm run app:build  # 桌面版构建
 
 > 国内网络提示：Tauri 打包器首次会从 GitHub 下载 NSIS 工具包（`nsis-3.11.zip` 与 `nsis_tauri_utils-v0.5.3.dll`）。若 `github.com` 不可达，可经镜像（如 `https://ghfast.top/` 前缀）下载这两个文件，SHA1 分别为 `EF7FF767E5CBD9EDD22ADD3A32C9B8F4500BB10D`、`75197FEE3C6A814FE035788D1C34EAD39349B860`，将 zip 解压重命名为 `%LOCALAPPDATA%\tauri\NSIS`（makensis.exe 在其根目录），dll 放入 `NSIS\Plugins\x86-unicode\additional\` 后重新执行 `npm run app:build`。
 
-桌面版使用系统 WebView2（Windows 11 自带），安装包体积小，无需打包 Chromium。窗口配置 `dragDropEnabled: false` 以保留 HTML5 原生拖放导入；导出的「选择文件夹」依赖 WebView2 的 File System Access API，不可用时自动回退 ZIP 下载。构建需要 Rust (MSVC) 工具链。
+桌面版使用系统 WebView2（Windows 11 自带），安装包体积小，无需打包 Chromium。窗口配置 `dragDropEnabled: false` 以保留 HTML5 原生拖放导入；导出窗口可选择「选择文件夹」或「ZIP 压缩包」。文件夹选择依赖 WebView2 的 File System Access API，系统或敏感目录可能被拒绝；建议选择专用输出子目录，遇到限制可直接选择 ZIP 并解压到目标位置。取消文件夹选择不会记为导出成功，不支持文件夹选择时默认 ZIP。构建需要 Rust (MSVC) 工具链。
 
 桌面启动依赖正式构建的 `custom-protocol` feature。Vite 将 `paper` 的运行时入口统一映射到 `paper/dist/paper-core.js`：本项目只使用 JavaScript 矢量 API，不使用 PaperScript。默认的 `paper-full` 会在初始化时动态编译 PaperScript，被桌面 CSP 拦截后导致首页黑屏；保持当前 CSP 并使用 core 构建即可避免该初始化错误。修改构建配置后须重新执行 `npm run app:build`，已有 exe 不会自动更新。
 
@@ -98,5 +98,7 @@ src/
 - **SVG**：第一阶段栅格化参与遮挡（导出 PNG 时按倍率重新栅格化保持清晰）；SVG Vector Boolean 见原规划第二阶段。
 
 ## 测试素材
+
+导出保存方式回归检查：`node scripts/export-regressions.cjs`，覆盖直接 ZIP、文件夹取消、无文件夹 API 和文件写入完成结果。
 
 `scripts/make-fixtures.mjs` 生成 `fixtures/`（3 张带透明通道的 PNG + 1 个 SVG），可用于手工验收：导入 → 任意变换 → 遮挡预览 → 批量导出 → 将导出图层按原坐标叠放，与普通预览对比。

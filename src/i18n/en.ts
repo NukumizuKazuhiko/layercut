@@ -50,6 +50,10 @@ export const en: Dict = {
 
   // Export dialog
   exportTitle: "Export",
+  exportDestination: "Save method",
+  exportToFolder: "Choose folder",
+  exportToZip: "ZIP archive",
+  folderRestrictedHint: "Choose a dedicated output folder. System directories may be denied; use a ZIP archive if the path is restricted.",
   scope: "Scope",
   scopeCurrent: "Current layer",
   scopeSelected: "Selected layers",
@@ -71,7 +75,7 @@ export const en: Dict = {
   needSelection: "Select a layer first",
   needLayers: "Canvas has no layers",
   folderTip: "Files will be saved to the chosen folder",
-  zipTip: "Folder picker unsupported — a ZIP archive will be downloaded",
+  zipTip: "Download a ZIP archive and extract it to get all output files",
   compositeName: "composite",
   hiddenLayersSkipped: "Hidden layers are skipped",
 

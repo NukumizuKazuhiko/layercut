@@ -3,7 +3,7 @@ import { useI18n } from "../i18n";
 import { useEditorStore } from "../layers/layerStore";
 import { useAssetStore } from "../assets/assetStore";
 import { validSelection } from "../layers/layerUtils";
-import { exportLayers, type ExportFormat, type ExportScope } from "../export/exportAll";
+import { exportLayers, type ExportDestination, type ExportFormat, type ExportScope } from "../export/exportAll";
 import { compositeName, exportName } from "../export/naming";
 import { analyzeSvgSafety } from "../vector/svgSafety";
 import { readExportConfig, writeExportConfig, type StoredExportConfig } from "../project/exportConfig";
@@ -55,6 +55,8 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   const [customScale, setCustomScale] = useState(String(savedScale ?? "2"));
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
+  const folderAvailable = "showDirectoryPicker" in window && typeof window.showDirectoryPicker === "function";
+  const [destination, setDestination] = useState<ExportDestination>(folderAvailable ? "folder" : "zip");
 
   const effectiveScale = scale === 0 ? Math.min(8, Math.max(0.1, Number(customScale) || 1)) : scale;
   const ext = format === "svg" ? "svg" : "png";
@@ -82,7 +84,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
     setProgress(t("exporting"));
     try {
       const result = await exportLayers(scope, effectiveScale, format, (done, total) =>
-        setProgress(`${t("exporting")} ${done}/${total}`)
+        setProgress(`${t("exporting")} ${done}/${total}`), destination
       );
       if (result === "cancelled") setProgress(t("exportCancelled"));
       else {
@@ -108,6 +110,19 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
     <div className="dialog-overlay" onMouseDown={onClose}>
       <div className="dialog" onMouseDown={(e) => e.stopPropagation()}>
         <h2>{t("exportTitle")}</h2>
+
+        <div className="field-label">{t("exportDestination")}</div>
+        <div className="scale-row">
+          <button className={`preset${destination === "folder" ? " active" : ""}`}
+            disabled={busy || !folderAvailable} onClick={() => setDestination("folder")}>
+            {t("exportToFolder")}
+          </button>
+          <button className={`preset${destination === "zip" ? " active" : ""}`}
+            disabled={busy} onClick={() => setDestination("zip")}>
+            {t("exportToZip")}
+          </button>
+        </div>
+        {destination === "folder" && <p className="dialog-note">{t("folderRestrictedHint")}</p>}
 
         <div className="field-label">{t("scope")}</div>
         <div className="preset-grid">
@@ -183,7 +198,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
         <p className="dialog-note">
           {format === "svg"
             ? t("svgOnlyAllSvg")
-            : "showDirectoryPicker" in window
+            : destination === "folder"
               ? t("folderTip")
               : t("zipTip")}
           {" · "}

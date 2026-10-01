@@ -9,6 +9,7 @@ import { computeVectorOcclusion } from "../vector/svgBoolean";
 
 export type ExportScope = "current" | "selected" | "all" | "composite";
 export type ExportFormat = "png" | "svg";
+export type ExportDestination = "folder" | "zip";
 
 export interface ExportOptions {
   scope: ExportScope;
@@ -58,19 +59,19 @@ export async function exportLayers(
   scope: ExportScope,
   scale: number,
   format: ExportFormat = "png",
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  destination: ExportDestination = "folder"
 ): Promise<"folder" | "zip" | "cancelled"> {
   const { canvas, layers, selectedIds } = useEditorStore.getState();
   const assets = useAssetStore.getState().assets;
 
   if (format === "svg") {
-    return exportVectorLayers(scope, scale, onProgress);
+    return exportVectorLayers(scope, scale, onProgress, destination);
   }
 
   if (scope === "composite") {
     const blob = await canvasToBlob(rasterizeComposite(layers, canvas, assets, scale));
-    await saveOrZip([{ name: compositeName(), blob }]);
-    return "folder";
+    return saveOrZip([{ name: compositeName(), blob }], destination);
   }
 
   const visible = layers.map((layer, index) => ({ layer, index })).filter(({ layer }) => layer.visible);
@@ -94,14 +95,15 @@ export async function exportLayers(
     onProgress?.(done, targets.length);
   }
 
-  return saveOrZip(files);
+  return saveOrZip(files, destination);
 }
 
 /** Vector export (§14 v0.6): Layer[i] − Union(Layers Above) as real SVG. */
 async function exportVectorLayers(
   scope: ExportScope,
   scale: number,
-  onProgress?: (done: number, total: number) => void
+  onProgress?: (done: number, total: number) => void,
+  destination: ExportDestination = "folder"
 ): Promise<"folder" | "zip" | "cancelled"> {
   if (scope === "composite") throw new Error("svg_composite_unsupported");
   const { canvas, layers, selectedIds } = useEditorStore.getState();
@@ -146,13 +148,18 @@ async function exportVectorLayers(
   }
   if (files.length === 0) throw new Error("svg_unsafe");
 
-  return saveOrZip(files);
+  return saveOrZip(files, destination);
 }
 
-async function saveOrZip(files: { name: string; blob: Blob }[]): Promise<"folder" | "zip" | "cancelled"> {
+async function saveOrZip(files: { name: string; blob: Blob }[], destination: ExportDestination): Promise<"folder" | "zip" | "cancelled"> {
+  if (files.length === 0) return "cancelled";
+  if (destination === "zip") {
+    await saveZip(files);
+    return "zip";
+  }
   const picker = (
     window as unknown as {
-      showDirectoryPicker?: (opts?: { mode?: string }) => Promise<{
+      showDirectoryPicker?: (opts?: { mode?: string; id?: string; startIn?: string }) => Promise<{
         getFileHandle: (name: string, opts?: { create?: boolean }) => Promise<WritableFileHandle>;
       }>;
     }
@@ -160,7 +167,7 @@ async function saveOrZip(files: { name: string; blob: Blob }[]): Promise<"folder
 
   if (picker) {
     try {
-      const dir = await picker({ mode: "readwrite" });
+      const dir = await picker.call(window, { mode: "readwrite", id: "layercut-export", startIn: "downloads" });
       await saveViaFolder(dir, files);
       return "folder";
     } catch (e) {

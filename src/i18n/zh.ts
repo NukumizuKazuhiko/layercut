@@ -48,6 +48,10 @@ export const zh = {
 
   // Export dialog
   exportTitle: "导出",
+  exportDestination: "保存方式",
+  exportToFolder: "选择文件夹",
+  exportToZip: "ZIP 压缩包",
+  folderRestrictedHint: "请选择专用输出文件夹；系统目录可能被拒绝。遇到路径限制时可改用 ZIP 压缩包。",
   scope: "导出范围",
   scopeCurrent: "当前图层",
   scopeSelected: "选中图层",
@@ -69,7 +73,7 @@ export const zh = {
   needSelection: "请先选中图层",
   needLayers: "画布中还没有图层",
   folderTip: "将保存到所选文件夹",
-  zipTip: "浏览器不支持选择文件夹，将下载 ZIP 压缩包",
+  zipTip: "将下载 ZIP 压缩包，解压后获得全部输出文件",
   compositeName: "合成图",
   hiddenLayersSkipped: "隐藏图层不会导出",
 
