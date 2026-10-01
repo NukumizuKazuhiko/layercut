@@ -1,0 +1,31 @@
+{
+  "name": "layercut",
+  "private": true,
+  "version": "0.4.0",
+  "type": "module",
+  "description": "LayerCut - non-destructive 2D layer occlusion & layered export tool",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "app:dev": "tauri dev",
+    "app:build": "tauri build"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "konva": "^9.3.20",
+    "paper": "^0.12.18",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-konva": "^18.2.10",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
+  }
+}
