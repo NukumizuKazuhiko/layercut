@@ -4,6 +4,7 @@ import { useEditorStore } from "../layers/layerStore";
 import { importFiles } from "../import/importFiles";
 import { openProjectFile } from "../project/saveProject";
 import { SliderField } from "./controls";
+import { ShapeOptionsRow, ShapeToolSegment } from "./ShapeTools";
 import {
   CanvasIcon,
   ExportIcon,
@@ -35,6 +36,7 @@ export function Toolbar({
   const projectInputRef = useRef<HTMLInputElement>(null);
 
   return (
+    <>
     <div className="toolbar">
       <button className="toolbar-brand" onClick={onHome} title={t("backToConsole")}>
         LayerCut
@@ -88,6 +90,8 @@ export function Toolbar({
         }}
       />
       <div className="toolbar-sep" />
+
+      <ShapeToolSegment />
 
       <div className="segmented">
         <button
@@ -150,5 +154,7 @@ export function Toolbar({
         {lang === "zh" ? "EN" : "中"}
       </button>
     </div>
+    <ShapeOptionsRow />
+    </>
   );
 }

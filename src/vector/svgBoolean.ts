@@ -11,13 +11,14 @@ import { getPaper, resetProject, type PaperPathItem } from "./paperEnv";
 import { importLayerGeometry } from "./svgNormalize";
 import type { CanvasSettings, Layer } from "../layers/layerTypes";
 import type { LayerAsset } from "../assets/assetStore";
+import { isLayerOccluder } from "../layers/layerUtils";
 
 export interface VectorOcclusionResult {
   /** per-layer SVG document string, full-canvas viewBox, transform baked in */
   byLayerId: Map<string, string>;
 }
 
-function exportVisibleSvg(item: PaperPathItem, canvas: CanvasSettings, scale: number): string {
+function exportVisibleSvg(item: paper.Item, canvas: CanvasSettings, scale: number): string {
   const P = getPaper();
   resetProject();
   const layer = new P.Layer();
@@ -53,7 +54,7 @@ export function computeVectorOcclusion(
 
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i];
-    if (!layer.visible) continue;
+    if (!isLayerOccluder(layer)) continue;
     const asset = layer.assetId ? assets[layer.assetId] ?? null : null;
     if (!asset || asset.kind !== "svg") continue;
     const normalized = importLayerGeometry(asset, layer);
@@ -64,11 +65,25 @@ export function computeVectorOcclusion(
       const visible = mask
         ? (filledGeometry.subtract(mask) as PaperPathItem)
         : filledGeometry;
-      byLayerId.set(layer.id, exportVisibleSvg(visible, canvas, scale));
+      if (layer.visible) {
+        // Boolean subtraction only concerns filled geometry. Keep stroke-only
+        // siblings in the output, with their paint intact (existing limitation:
+        // stroke outlines are not clipped by the mask).
+        const P = getPaper();
+        const strokeOnly = (normalized.item instanceof P.PathItem
+          ? [normalized.item]
+          : normalized.item.getItems({ class: P.PathItem }) as PaperPathItem[])
+          .filter((item) => !item.fillColor && !!item.strokeColor)
+          .map((item) => item.clone({ insert: false, deep: true }));
+        const output = strokeOnly.length
+          ? new P.Group({ children: [visible, ...strokeOnly], insert: false })
+          : visible;
+        byLayerId.set(layer.id, exportVisibleSvg(output, canvas, scale));
+      }
       mask = mask ? (mask.unite(filledGeometry) as PaperPathItem) : filledGeometry;
     } else {
       // stroke-only or empty geometry: nothing occludes, export as-is
-      byLayerId.set(layer.id, exportVisibleSvg(normalized.item as PaperPathItem, canvas, scale));
+      if (layer.visible) byLayerId.set(layer.id, exportVisibleSvg(normalized.item as PaperPathItem, canvas, scale));
     }
   }
 

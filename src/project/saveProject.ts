@@ -1,4 +1,7 @@
 import { downloadBlob } from "../export/exportPNG";
+import { isTauri } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { importPNGFile } from "../import/importPNG";
 import { importSVGFile } from "../import/importSVG";
 import { useAssetStore } from "../assets/assetStore";
@@ -8,28 +11,40 @@ import { sanitizeFileName } from "../layers/layerUtils";
 import { addRecent } from "./storage";
 import {
   PROJECT_EXT,
+  embeddedAssetBlob,
   isValidProjectJson,
   serializeProject,
   type SerializedProject,
 } from "./projectTypes";
 import { readExportConfig, writeExportConfig } from "./exportConfig";
 
-/** Serialize the current document and download it as {name}.layercut. */
-export async function saveProjectAs(rawName: string): Promise<void> {
+/** Serialize the current document and save it as {name}.layercut. */
+export async function saveProjectAs(rawName: string): Promise<boolean> {
   const name = rawName.trim() || "layercut";
   const s = useEditorStore.getState();
+  const savedVersion = s.historyVersion;
+  const documentEpoch = s.documentEpoch;
   const assets = useAssetStore.getState().assets;
   const exportConfig = readExportConfig();
   const project = await serializeProject(name, s.canvas, s.layers, assets, exportConfig);
   const json = JSON.stringify(project);
 
-  const blob = new Blob([json], { type: "application/json" });
-  downloadBlob(blob, `${sanitizeFileName(name)}${PROJECT_EXT}`);
+  const filename = `${sanitizeFileName(name)}${PROJECT_EXT}`;
+  if (isTauri()) {
+    const path = await save({ defaultPath: filename, filters: [{ name: "LayerCut", extensions: ["layercut"] }] });
+    if (path === null) return false;
+    await writeTextFile(path, json);
+  } else {
+    downloadBlob(new Blob([json], { type: "application/json" }), filename);
+  }
 
   await addRecent({ name, savedAt: Date.now(), layerCount: s.layers.length, json });
   const store = useEditorStore.getState();
-  store.setProjectName(name);
-  store.markSaved();
+  if (store.documentEpoch === documentEpoch) {
+    store.setProjectName(name);
+    store.markSaved(savedVersion, documentEpoch);
+  }
+  return true;
 }
 
 /**
@@ -50,7 +65,7 @@ export async function loadProjectJson(json: string, name?: string): Promise<void
   const idMap = new Map<string, string>();
   for (const [oldId, sa] of Object.entries(project.assets ?? {})) {
     try {
-      const blob = await (await fetch(sa.data)).blob();
+      const blob = embeddedAssetBlob(sa.data, sa.mimeType);
       const file = new File([blob], sa.fileName || "asset", { type: sa.mimeType });
       if (sa.kind === "svg" || sa.mimeType === "image/svg+xml") {
         const { asset } = await importSVGFile(file);
@@ -60,7 +75,8 @@ export async function loadProjectJson(json: string, name?: string): Promise<void
         idMap.set(oldId, asset.id);
       }
     } catch (e) {
-      console.warn("project asset failed to load:", sa.fileName, e);
+      console.warn("project asset failed to load", e);
+      throw new Error(`project asset failed to load: ${sa.fileName}`);
     }
   }
 
@@ -78,6 +94,10 @@ export async function loadProjectJson(json: string, name?: string): Promise<void
       opacity: finiteOr(l.opacity, 1, 0, 1),
       visible: l.visible !== false,
       locked: l.locked === true,
+      aspectLocked: l.aspectLocked === true,
+      occludesWhenHidden: l.occludesWhenHidden === true,
+      svgFillColor: l.type === "svg" && /^#[0-9a-f]{6}$/i.test(l.svgFillColor ?? "") ? l.svgFillColor : null,
+      svgStrokeColor: l.type === "svg" && /^#[0-9a-f]{6}$/i.test(l.svgStrokeColor ?? "") ? l.svgStrokeColor : null,
       assetId: l.assetId ? idMap.get(l.assetId) ?? null : null,
       transform: {
         x: finiteOr(l.transform.x, 0),
@@ -109,9 +129,7 @@ export async function openProjectFile(file: File): Promise<void> {
 
 function finiteOr(v: unknown, fallback: number, min?: number, max?: number): number {
   const n = typeof v === "number" && isFinite(v) ? v : fallback;
-  if (min !== undefined) return Math.max(min, n);
-  if (max !== undefined) return Math.min(max, n);
-  return n;
+  return Math.min(max ?? Infinity, Math.max(min ?? -Infinity, n));
 }
 
 function clampInt(v: unknown, min: number, max: number, fallback: number): number {

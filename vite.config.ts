@@ -16,5 +16,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    watch: { ignored: ["**/src-tauri/target/**"] },
   },
 });

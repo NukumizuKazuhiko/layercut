@@ -1,6 +1,17 @@
 import { useEffect } from "react";
-import { useEditorStore } from "../layers/layerStore";
+import { hasPendingTransaction, useEditorStore } from "../layers/layerStore";
 import { useViewportStore } from "./ViewportManager";
+import { isShapeTool, type EditorTool } from "../shapes/shapeTypes";
+
+/** Single-key drawing-tool shortcuts (V/R/O/L/P/S); the toolbar shows the same set. */
+const TOOL_KEYS: Record<string, EditorTool> = {
+  v: "select",
+  r: "rect",
+  o: "ellipse",
+  l: "line",
+  p: "polygon",
+  s: "star",
+};
 
 /** Input types that consume typing keys — everything else (range, color…) lets shortcuts through. */
 const TYPING_INPUT_TYPES = new Set([
@@ -32,6 +43,9 @@ export function useKeyboard() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (isTypingTarget(e.target)) return;
+      const target = e.target as HTMLInputElement | null;
+      if (target?.tagName === "INPUT" && target.type === "range" &&
+          ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End", "PageUp", "PageDown"].includes(e.key)) return;
       const s = useEditorStore.getState();
       const vp = useViewportStore.getState();
       const mod = e.ctrlKey || e.metaKey;
@@ -77,8 +91,18 @@ export function useKeyboard() {
         s.deleteSelected();
         return;
       }
+      // Esc first disarms a drawing tool, then clears the selection
       if (e.key === "Escape") {
-        s.clearSelection();
+        if (isShapeTool(s.activeTool)) s.setActiveTool("select");
+        else s.clearSelection();
+        return;
+      }
+      if (!mod && !e.altKey && TOOL_KEYS[key]) {
+        // Keep the shortcuts out of the way while a gesture transaction is open.
+        if (!hasPendingTransaction()) {
+          e.preventDefault();
+          s.setActiveTool(TOOL_KEYS[key]);
+        }
         return;
       }
       if (e.key.startsWith("Arrow")) {

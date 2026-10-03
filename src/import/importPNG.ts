@@ -17,6 +17,7 @@ export async function importPNGFile(file: File): Promise<{ asset: LayerAsset }> 
     naturalWidth: bitmap.width,
     naturalHeight: bitmap.height,
     bitmap,
+    sourceBlob: file,
     previewUrl: URL.createObjectURL(file),
   };
   useAssetStore.getState().put(asset);

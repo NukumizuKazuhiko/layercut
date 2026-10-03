@@ -6,6 +6,8 @@ import { canvasToBlob, computeOcclusionForExport, rasterizeComposite } from "./e
 import { compositeName, exportName } from "./naming";
 import { analyzeSvgSafety } from "../vector/svgSafety";
 import { computeVectorOcclusion } from "../vector/svgBoolean";
+import { isLayerOccluder } from "../layers/layerUtils";
+import { paintedAssetsForLayers } from "../vector/svgPaint";
 
 export type ExportScope = "current" | "selected" | "all" | "composite";
 export type ExportFormat = "png" | "svg";
@@ -52,8 +54,8 @@ async function saveZip(files: { name: string; blob: Blob }[]): Promise<void> {
 /**
  * Batch export (project plan §7). Prefers the File System Access API so users
  * pick a real folder; falls back to a single ZIP download.
- * Hidden layers are skipped (they render and occlude nothing).
- * format "svg" requires every visible layer to be a vector-safe SVG (§7.3).
+ * Hidden layers are skipped as outputs. A hidden occluder still cuts lower layers.
+ * format "svg" requires every participating layer to be a vector-safe SVG (§7.3).
  */
 export async function exportLayers(
   scope: ExportScope,
@@ -68,9 +70,10 @@ export async function exportLayers(
   if (format === "svg") {
     return exportVectorLayers(scope, scale, onProgress, destination);
   }
+  const renderAssets = await paintedAssetsForLayers(layers, assets);
 
   if (scope === "composite") {
-    const blob = await canvasToBlob(rasterizeComposite(layers, canvas, assets, scale));
+    const blob = await canvasToBlob(rasterizeComposite(layers, canvas, renderAssets, scale));
     return saveOrZip([{ name: compositeName(), blob }], destination);
   }
 
@@ -83,7 +86,7 @@ export async function exportLayers(
   }
 
   // one occlusion pass serves every layer (project plan §15)
-  const occlusion = computeOcclusionForExport(layers, canvas, assets, scale);
+  const occlusion = computeOcclusionForExport(layers, canvas, renderAssets, scale);
   const files: { name: string; blob: Blob }[] = [];
   let done = 0;
   for (const { layer, index } of targets) {
@@ -110,11 +113,11 @@ async function exportVectorLayers(
   const assets = useAssetStore.getState().assets;
 
   const visible = layers.map((layer, index) => ({ layer, index })).filter(({ layer }) => layer.visible);
-  if (visible.some(({ layer }) => layer.type !== "svg")) {
+  if (layers.some((layer) => isLayerOccluder(layer) && layer.type !== "svg")) {
     throw new Error("svg_needs_all_svg"); // a PNG layer exists (§7.3)
   }
 
-  for (const { layer } of visible) {
+  for (const layer of layers.filter(isLayerOccluder)) {
     const asset = layer.assetId ? assets[layer.assetId] : null;
     if (asset?.kind === "svg" && asset.svgText) {
       const safety = analyzeSvgSafety(asset.svgText);

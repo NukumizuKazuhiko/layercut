@@ -1,7 +1,7 @@
 {
   "name": "layercut",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.1",
   "type": "module",
   "description": "LayerCut - non-destructive 2D layer occlusion & layered export tool",
   "license": "UNLICENSED",
@@ -13,6 +13,9 @@
     "app:build": "tauri build"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-dialog": "^2.8.1",
+    "@tauri-apps/plugin-fs": "^2.6.0",
     "jszip": "^3.10.1",
     "konva": "^9.3.20",
     "paper": "^0.12.18",

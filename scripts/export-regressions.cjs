@@ -28,6 +28,9 @@ function harness(picker) {
     './exportPNG': { canvasToBlob: async () => blob, rasterizeComposite: () => ({}) },
     './naming': { compositeName: () => 'composite.png' },
     '../vector/svgSafety': {}, '../vector/svgBoolean': {},
+    // Layers carry per-layer paint overrides in the real pipeline; these tests
+    // only cover the save destination, so paint resolution is an identity pass.
+    '../vector/svgPaint': { paintedAssetsForLayers: async (_layers, assets) => assets },
   };
   const js = ts.transpileModule(source, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, esModuleInterop: true,

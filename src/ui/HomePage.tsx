@@ -57,6 +57,7 @@ export function HomePage({ onEnter }: { onEnter: () => void }) {
   const [height, setHeight] = useState("1920");
   const [background, setBackground] = useState<"transparent" | string>("transparent");
   const [busy, setBusy] = useState(false);
+  const [saveError, setSaveError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -119,9 +120,14 @@ export function HomePage({ onEnter }: { onEnter: () => void }) {
 
   const quickSave = async () => {
     setBusy(true);
+    setSaveError(false);
     try {
-      await saveProjectAs(useEditorStore.getState().projectName || "");
-      setRecents(await listRecents());
+      if (await saveProjectAs(useEditorStore.getState().projectName || "")) {
+        setRecents(await listRecents());
+      }
+    } catch (error) {
+      console.error(error);
+      setSaveError(true);
     } finally {
       setBusy(false);
     }
@@ -148,6 +154,8 @@ export function HomePage({ onEnter }: { onEnter: () => void }) {
           </button>
         </div>
       </header>
+
+      {saveError && <p className="dialog-note warn" role="alert">⚠ {t("saveFailed")}</p>}
 
       <main className="home-main">
         {recovery && recoveryInfo && (

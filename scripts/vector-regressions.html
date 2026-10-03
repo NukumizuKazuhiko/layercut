@@ -1,0 +1,16 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Vector regression checks</title>
+<pre id="result">running</pre>
+<script type="module">
+  import { runVectorRegressions } from './vector-regressions.ts';
+  const out = document.querySelector('#result');
+  try {
+    const result = await runVectorRegressions();
+    out.textContent = JSON.stringify(result, null, 2);
+    document.documentElement.dataset.status = result.passed === result.total ? 'passed' : 'failed';
+  } catch (error) {
+    out.textContent = String(error);
+    document.documentElement.dataset.status = 'error';
+  }
+</script>

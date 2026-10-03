@@ -33,6 +33,15 @@ export const PROJECT_APP_TAG = "layercut";
 export const PROJECT_VERSION = 1 as const;
 export const PROJECT_EXT = ".layercut";
 
+/** Decode an embedded project asset without a network request (Tauri CSP). */
+export function embeddedAssetBlob(dataUrl: string, mimeType: string): Blob {
+  const encoded = dataUrl.slice(dataUrl.indexOf(",") + 1);
+  const binary = atob(encoded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
+}
+
 // ---------------------------------------------------------------------------
 // Serialize: store state → SerializedProject
 // Asset data URLs are cached per asset id — assets are immutable, so repeated
@@ -50,6 +59,18 @@ async function blobToBase64(blob: Blob): Promise<string> {
     binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
   }
   return btoa(binary);
+}
+
+async function pngBlobFromBitmap(asset: LayerAsset): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = asset.naturalWidth;
+  canvas.height = asset.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error(`PNG source unavailable: ${asset.fileName}`);
+  context.drawImage(asset.bitmap, 0, 0);
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error(`PNG encode failed: ${asset.fileName}`)), "image/png");
+  });
 }
 
 export async function serializeProject(
@@ -74,8 +95,9 @@ export async function serializeProject(
       const b64 = await blobToBase64(new Blob([asset.svgText], { type: "image/svg+xml" }));
       dataUrl = `data:image/svg+xml;base64,${b64}`;
     } else {
-      // original file bytes are still reachable through the preview object URL
-      const blob = await (await fetch(asset.previewUrl)).blob();
+      // In Tauri, connect-src does not allow fetch(blob:). Keep the source bytes
+      // at import; only legacy in-memory assets need a bitmap re-encode.
+      const blob = asset.sourceBlob ?? await pngBlobFromBitmap(asset);
       const mime = asset.mimeType || blob.type || "image/png";
       dataUrl = `data:${mime};base64,${await blobToBase64(blob)}`;
     }
@@ -104,7 +126,48 @@ export async function serializeProject(
 // ---------------------------------------------------------------------------
 
 export function isValidProjectJson(value: unknown): value is SerializedProject {
-  if (typeof value !== "object" || value === null) return false;
-  const v = value as Record<string, unknown>;
-  return v.app === PROJECT_APP_TAG && v.version === PROJECT_VERSION && typeof v.canvas === "object";
+  if (!isRecord(value)) return false;
+  const v = value;
+  if (v.app !== PROJECT_APP_TAG || v.version !== PROJECT_VERSION || typeof v.name !== "string") return false;
+  if (!isRecord(v.canvas) || !finite(v.canvas.width) || !finite(v.canvas.height) || typeof v.canvas.background !== "string") return false;
+  if (!isRecord(v.assets) || !Array.isArray(v.layers)) return false;
+  for (const asset of Object.values(v.assets)) {
+    if (!isRecord(asset) || (asset.kind !== "png" && asset.kind !== "svg") || typeof asset.fileName !== "string" || typeof asset.mimeType !== "string") return false;
+    // Project material is self-contained. Reject network URLs before fetching.
+    if (typeof asset.data !== "string" || !/^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/]*={0,2}$/i.test(asset.data)) return false;
+  }
+  const ids = new Set<string>();
+  for (const layer of v.layers) {
+    if (!isRecord(layer) || typeof layer.id !== "string" || !layer.id || ids.has(layer.id)) return false;
+    ids.add(layer.id);
+    if (typeof layer.name !== "string" || !["png", "svg", "empty"].includes(String(layer.type))) return false;
+    if (typeof layer.visible !== "boolean" || typeof layer.locked !== "boolean" || !finite(layer.opacity)) return false;
+    if (layer.aspectLocked !== undefined && typeof layer.aspectLocked !== "boolean") return false;
+    if (layer.occludesWhenHidden !== undefined && typeof layer.occludesWhenHidden !== "boolean") return false;
+    for (const key of ["svgFillColor", "svgStrokeColor"]) {
+      const color = layer[key];
+      if (color !== undefined && color !== null && (layer.type !== "svg" || typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))) return false;
+    }
+    const transform = layer.transform;
+    if (!isRecord(transform) || !["x", "y", "scaleX", "scaleY", "rotation"].every(key => finite(transform[key]))) return false;
+    if (layer.type === "empty") {
+      if (layer.assetId !== null) return false;
+    } else {
+      if (typeof layer.assetId !== "string" || !Object.prototype.hasOwnProperty.call(v.assets, layer.assetId)) return false;
+      if ((v.assets[layer.assetId] as Record<string, unknown>).kind !== layer.type) return false;
+    }
+  }
+  if (v.exportConfig !== undefined) {
+    if (!isRecord(v.exportConfig) || !["current", "selected", "all", "composite"].includes(String(v.exportConfig.scope))) return false;
+    if (!finite(v.exportConfig.scale) || v.exportConfig.scale < 0.1 || v.exportConfig.scale > 8) return false;
+  }
+  return true;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function finite(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
 }

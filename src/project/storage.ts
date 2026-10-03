@@ -32,9 +32,12 @@ function tx<T>(store: string, mode: IDBTransactionMode, run: (s: IDBObjectStore)
       new Promise<T>((resolve, reject) => {
         const t = db.transaction(store, mode);
         const req = run(t.objectStore(store));
-        req.onsuccess = () => resolve(req.result);
+        let result: T;
+        req.onsuccess = () => { result = req.result; };
         req.onerror = () => reject(req.error);
-        t.oncomplete = () => db.close();
+        t.oncomplete = () => { db.close(); resolve(result); };
+        t.onabort = () => { db.close(); reject(t.error ?? req.error ?? new Error("IndexedDB transaction aborted")); };
+        t.onerror = () => { db.close(); reject(t.error ?? req.error); };
       })
   );
 }
@@ -58,11 +61,8 @@ export interface AutosaveRecord {
 }
 
 export async function writeAutosave(record: AutosaveRecord): Promise<void> {
-  try {
-    await tx(STORE_AUTOSAVE, "readwrite", (s) => s.put(record, "latest"));
-  } catch (e) {
-    console.warn("autosave failed", e);
-  }
+  // Resolve only after transaction commit; callers must not mark failed writes saved.
+  await tx(STORE_AUTOSAVE, "readwrite", (s) => s.put(record, "latest"));
 }
 
 export async function readAutosave(): Promise<AutosaveRecord | null> {

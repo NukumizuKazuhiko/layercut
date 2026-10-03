@@ -1,6 +1,6 @@
 [package]
 name = "layercut"
-version = "0.4.0"
+version = "0.4.1"
 description = "LayerCut - non-destructive 2D layer occlusion & layered export tool"
 authors = ["LayerCut"]
 edition = "2021"
@@ -11,9 +11,13 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+# schemars (via Tauri) uses IndexMap<K, V>; its default hasher needs std.
+indexmap = { version = "1.9.3", features = ["std"] }
 
 [dependencies]
 tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
 
 # `custom-protocol` must be selectable as a feature: `tauri`'s build script
 # derives its `dev` cfg from `dev = !custom_protocol`, and the `dev` cfg decides

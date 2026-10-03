@@ -12,6 +12,12 @@ import { useViewportStore } from "./ViewportManager";
 import { SelectionTransformer, collectSnapTargets, snapAABB } from "./TransformManager";
 import { importFiles } from "../import/importFiles";
 import { computeOcclusion, type OcclusionResult } from "../occlusion/OcclusionEngine";
+import { paintedAsset, paintedAssetsForLayers } from "../vector/svgPaint";
+import { isShapeTool, type ShapeKind } from "../shapes/shapeTypes";
+import { SHAPE_NAME_KEY } from "../shapes/shapeLabels";
+import { useShapeGesture } from "./useShapeGesture";
+import { ShapePreview } from "./ShapePreview";
+import { useI18n } from "../i18n";
 
 interface Guide {
   v: number | null;
@@ -36,16 +42,33 @@ function LayerNode({
   layer,
   asset,
   nodeRefs,
+  onNodeChange,
 }: {
   layer: Layer;
   asset: LayerAsset | null;
   nodeRefs: React.MutableRefObject<Record<string, Konva.Image | null>>;
+  onNodeChange: () => void;
 }) {
-  const interactive = useEditorStore((s) => s.previewMode === "normal");
+  const interactive = useEditorStore((s) => s.previewMode === "normal" && s.activeTool === "select");
+  const [renderAsset, setRenderAsset] = useState<LayerAsset | null>(asset);
+  useEffect(() => {
+    let active = true;
+    if (!asset) { setRenderAsset(null); return; }
+    setRenderAsset(asset.kind === "svg" && (layer.svgFillColor || layer.svgStrokeColor) ? null : asset);
+    paintedAsset(asset, layer).then((painted) => {
+      if (active) setRenderAsset(painted);
+    }).catch((error) => console.error("SVG paint preview failed", error));
+    return () => { active = false; };
+  }, [asset, layer.svgFillColor, layer.svgStrokeColor]);
+  const registerNode = useCallback((node: Konva.Image | null) => {
+    if (nodeRefs.current[layer.id] === node) return;
+    nodeRefs.current[layer.id] = node;
+    onNodeChange();
+  }, [layer.id, nodeRefs, onNodeChange]);
 
   const handleMouseDown = useCallback(
     (e: KonvaEventObject<MouseEvent>) => {
-      if (isPanning) return;
+      if (isPanning || e.evt.button !== 0) return;
       const s = useEditorStore.getState();
       const additive = e.evt.shiftKey || e.evt.ctrlKey || e.evt.metaKey;
       const selected = validSelection(s.layers, s.selectedIds);
@@ -66,7 +89,7 @@ function LayerNode({
       const ids = validSelection(s.layers, s.selectedIds);
       const origin = new Map<string, { x: number; y: number }>();
       for (const l of s.layers) {
-        if (ids.includes(l.id)) origin.set(l.id, { x: l.transform.x, y: l.transform.y });
+        if (ids.includes(l.id) && !l.locked) origin.set(l.id, { x: l.transform.x, y: l.transform.y });
       }
       if (!origin.has(layer.id)) {
         origin.set(layer.id, { x: layer.transform.x, y: layer.transform.y });
@@ -144,7 +167,7 @@ function LayerNode({
   return (
     <KonvaImage
       id={layer.id}
-      image={asset.bitmap as CanvasImageSource}
+      image={renderAsset?.bitmap as CanvasImageSource | undefined}
       x={t.x}
       y={t.y}
       offsetX={asset.naturalWidth / 2}
@@ -160,9 +183,7 @@ function LayerNode({
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
-      ref={(node) => {
-        nodeRefs.current[layer.id] = node;
-      }}
+      ref={registerNode}
     />
   );
 }
@@ -180,7 +201,12 @@ function OcclusionPreview() {
   const [result, setResult] = useState<OcclusionResult | null>(null);
 
   useEffect(() => {
-    setResult(computeOcclusion(layers, canvas, assets, 1));
+    let active = true;
+    setResult(null);
+    paintedAssetsForLayers(layers, assets).then((renderAssets) => {
+      if (active) setResult(computeOcclusion(layers, canvas, renderAssets, 1));
+    }).catch((error) => console.error("SVG paint occlusion preview failed", error));
+    return () => { active = false; };
   }, [layers, canvas, assets]);
 
   const selected = new Set(selectionKey ? selectionKey.split(",") : []);
@@ -214,19 +240,37 @@ function OcclusionPreview() {
 export function CanvasEditor() {
   const containerRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<Record<string, Konva.Image | null>>({});
+  // Selection can update before react-konva has committed a newly imported image.
+  // Track node availability so the Transformer attaches once its ref is ready.
+  const [nodeRevision, setNodeRevision] = useState(0);
+  const onNodeChange = useCallback(() => setNodeRevision((revision) => revision + 1), []);
   const spaceHeldRef = useRef(false);
   const [spaceHeld, setSpaceHeld] = useState(false);
+  const [mousePanning, setMousePanning] = useState(false);
+  const panCleanupRef = useRef<((updateState?: boolean) => void) | null>(null);
   const [guide, setGuide] = useState<Guide | null>(null);
 
   const canvas = useEditorStore((s) => s.canvas);
   const layers = useEditorStore((s) => s.layers);
   const previewMode = useEditorStore((s) => s.previewMode);
+  const activeTool = useEditorStore((s) => s.activeTool);
+  const shapeStyle = useEditorStore((s) => s.shapeStyle);
+  const shapeSides = useEditorStore((s) => s.shapeSides);
   const stageWidth = useViewportStore((s) => s.stageWidth);
   const stageHeight = useViewportStore((s) => s.stageHeight);
   const scale = useViewportStore((s) => s.scale);
   const vpX = useViewportStore((s) => s.x);
   const vpY = useViewportStore((s) => s.y);
   const assets = useAssetStore((s) => s.assets);
+  const { t } = useI18n();
+
+  const drawing = previewMode === "normal" && isShapeTool(activeTool);
+  const shapeName = useCallback((kind: ShapeKind) => t(SHAPE_NAME_KEY[kind]), [t]);
+  const { drag, startDraw } = useShapeGesture({
+    containerRef,
+    nameFor: shapeName,
+    failureNotice: t("shapeCreateFailed"),
+  });
 
   // guide pub/sub (only while dragging)
   useEffect(() => {
@@ -247,6 +291,8 @@ export function CanvasEditor() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+
+  useEffect(() => () => panCleanupRef.current?.(false), []);
 
   // wheel zoom (needs a non-passive native listener)
   useEffect(() => {
@@ -300,9 +346,12 @@ export function CanvasEditor() {
   }, [fitKey, stageWidth, stageHeight, canvas.width, canvas.height]);
 
   const startPan = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 1 && !(e.button === 0 && spaceHeldRef.current)) return;
+    if (e.button !== 1 && e.button !== 2 && !(e.button === 0 && spaceHeldRef.current)) return;
+    if (isPanning) return;
     e.preventDefault();
     isPanning = true;
+    setMousePanning(true);
+    const panButton = e.button;
     const startX = e.clientX;
     const startY = e.clientY;
     const { x, y } = useViewportStore.getState();
@@ -311,14 +360,36 @@ export function CanvasEditor() {
         .getState()
         .set({ x: x + ev.clientX - startX, y: y + ev.clientY - startY });
     };
-    const onUp = () => {
+    const onBlur = () => cleanup();
+    const cleanup = (updateState = true) => {
       isPanning = false;
+      if (updateState) setMousePanning(false);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("blur", onBlur);
+      panCleanupRef.current = null;
     };
+    const onUp = (ev: MouseEvent) => {
+      if (ev.button === panButton) cleanup();
+    };
+    panCleanupRef.current = cleanup;
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
+    window.addEventListener("blur", onBlur);
   }, []);
+
+  /**
+   * Left button with a shape tool draws; every other gesture (middle / right
+   * button, or Space + left button) keeps panning, so a draw tool never takes
+   * the viewport away from the user.
+   */
+  const handleCanvasMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button === 0 && !spaceHeldRef.current && startDraw(e)) return;
+      startPan(e);
+    },
+    [startDraw, startPan]
+  );
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -328,7 +399,7 @@ export function CanvasEditor() {
   }, []);
 
   const handleStageMouseDown = useCallback((e: KonvaEventObject<MouseEvent>) => {
-    if (isPanning) return;
+    if (isPanning || e.evt.button !== 0) return;
     if (e.target === e.target.getStage()) {
       useEditorStore.getState().clearSelection();
     }
@@ -340,11 +411,11 @@ export function CanvasEditor() {
 
   return (
     <div
-      className={`canvas-area${spaceHeld ? " panning" : ""}`}
+      className={`canvas-area${spaceHeld || mousePanning ? " panning" : ""}${drawing ? " drawing" : ""}`}
       ref={containerRef}
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
-      onMouseDown={startPan}
+      onMouseDown={handleCanvasMouseDown}
       onContextMenu={(e) => e.preventDefault()}
     >
       {layers.length === 0 && <div className="canvas-empty-hint">PNG / SVG ⬇</div>}
@@ -381,6 +452,7 @@ export function CanvasEditor() {
               layer={layer}
               asset={layer.assetId ? assets[layer.assetId] ?? null : null}
               nodeRefs={nodeRefs}
+              onNodeChange={onNodeChange}
             />
           ))}
         </KonvaLayer>
@@ -390,7 +462,7 @@ export function CanvasEditor() {
           <OcclusionPreview />
         </KonvaLayer>
 
-        {/* transformer + snap guides */}
+        {/* transformer + shape preview + snap guides */}
         <KonvaLayer>
           {guide?.v != null && (
             <GuideLine vertical at={guide.v} canvas={canvas} scale={safeScale} />
@@ -398,7 +470,12 @@ export function CanvasEditor() {
           {guide?.h != null && (
             <GuideLine vertical={false} at={guide.h} canvas={canvas} scale={safeScale} />
           )}
-          {previewMode === "normal" && <SelectionTransformer nodeRefs={nodeRefs} />}
+          {drag && isShapeTool(activeTool) && (
+            <ShapePreview kind={activeTool} drag={drag} style={shapeStyle} sides={shapeSides} />
+          )}
+          {previewMode === "normal" && !drawing && (
+            <SelectionTransformer nodeRefs={nodeRefs} nodeRevision={nodeRevision} />
+          )}
         </KonvaLayer>
       </Stage>
     </div>

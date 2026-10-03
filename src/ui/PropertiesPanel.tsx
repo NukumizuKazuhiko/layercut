@@ -4,18 +4,14 @@ import { useAssetStore } from "../assets/assetStore";
 import { validSelection, findLayer } from "../layers/layerUtils";
 import { getLayerSize } from "../utils/geometry";
 import { NumberField, SliderField, ColorField } from "./controls";
+import { AspectLockIcon } from "./icons";
 
 /** Commit helper: inside a drag transaction → finish it; click-jump → one committed step. */
 function commitOpacity(ids: string[], v: number) {
   const store = useEditorStore.getState();
+  if (!hasPendingTransaction()) store.beginTransaction();
   store.setLayersOpacity(ids, v / 100, false);
-  if (hasPendingTransaction()) store.commitTransaction();
-  else {
-    // no transaction open (keyboard/click-jump): make this its own undo step
-    store.beginTransaction();
-    store.setLayersOpacity(ids, v / 100, false);
-    store.commitTransaction();
-  }
+  store.commitTransaction();
 }
 
 export function PropertiesPanel({ width, collapsed }: { width: number; collapsed: boolean }) {
@@ -48,6 +44,7 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
               <span className="field-label">{t("x")}</span>
               <NumberField
                 value={single.transform.x}
+                disabled={single.locked}
                 onCommit={(v) =>
                   useEditorStore.getState().updateLayerTransform(single.id, { x: v })
                 }
@@ -57,6 +54,7 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
               <span className="field-label">{t("y")}</span>
               <NumberField
                 value={single.transform.y}
+                disabled={single.locked}
                 onCommit={(v) =>
                   useEditorStore.getState().updateLayerTransform(single.id, { y: v })
                 }
@@ -69,12 +67,11 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
               <span className="field-label">{t("width")}</span>
               <NumberField
                 value={size?.width ?? 0}
+                disabled={single.locked}
                 min={1}
                 onCommit={(v) => {
                   if (!natural || natural.width === 0) return;
-                  useEditorStore
-                    .getState()
-                    .updateLayerTransform(single.id, { scaleX: v / natural.width });
+                  useEditorStore.getState().setLayerDimension(single.id, "width", v, natural);
                 }}
               />
             </label>
@@ -82,22 +79,34 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
               <span className="field-label">{t("height")}</span>
               <NumberField
                 value={size?.height ?? 0}
+                disabled={single.locked}
                 min={1}
                 onCommit={(v) => {
                   if (!natural || natural.height === 0) return;
-                  useEditorStore
-                    .getState()
-                    .updateLayerTransform(single.id, { scaleY: v / natural.height });
+                  useEditorStore.getState().setLayerDimension(single.id, "height", v, natural);
                 }}
               />
             </label>
           </div>
+
+          {single.type !== "empty" && (
+            <button
+              className={`btn aspect-lock${single.aspectLocked ? " active" : ""}`}
+              type="button"
+              aria-pressed={single.aspectLocked}
+              disabled={single.locked}
+              onClick={() => useEditorStore.getState().updateLayer(single.id, { aspectLocked: !single.aspectLocked })}
+            >
+              <AspectLockIcon /> {t(single.aspectLocked ? "aspectLockOn" : "aspectLockOff")}
+            </button>
+          )}
 
           <div className="form-row">
             <label>
               <span className="field-label">{t("rotation")} °</span>
               <NumberField
                 value={single.transform.rotation}
+                disabled={single.locked}
                 onCommit={(v) =>
                   useEditorStore.getState().updateLayerTransform(single.id, { rotation: v })
                 }
@@ -112,6 +121,7 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
             value={Math.round(single.opacity * 100)}
             min={0}
             max={100}
+            disabled={single.locked}
             onDragStart={() => useEditorStore.getState().beginTransaction()}
             onChange={(v) =>
               useEditorStore.getState().setLayersOpacity([single.id], v / 100, false)
@@ -119,9 +129,33 @@ export function PropertiesPanel({ width, collapsed }: { width: number; collapsed
             onCommit={(v) => commitOpacity([single.id], v)}
           />
 
+          {single.type === "svg" && (
+            <div className="svg-paint-controls">
+              {(["svgFillColor", "svgStrokeColor"] as const).map((channel) => (
+                <div className="bg-row" key={channel}>
+                  <span className="field-label">{t(channel === "svgFillColor" ? "svgFill" : "svgStroke")}</span>
+                  <ColorField
+                    value={single[channel] ?? "#1F2326"}
+                    disabled={single.locked}
+                    onChange={(color) => useEditorStore.getState().setSvgPaintColor(single.id, channel, color)}
+                    title={t(channel === "svgFillColor" ? "svgFill" : "svgStroke")}
+                  />
+                  <button
+                    className="btn"
+                    type="button"
+                    disabled={single.locked || !single[channel]}
+                    onClick={() => useEditorStore.getState().setSvgPaintColor(single.id, channel, null)}
+                  >{t("svgOriginalColor")}</button>
+                </div>
+              ))}
+              <p className="muted small">{t("svgPaintHint")}</p>
+            </div>
+          )}
+
           {single.type !== "empty" && (
             <button
               className="btn wide"
+              disabled={single.locked}
               onClick={() => {
                 const store = useEditorStore.getState();
                 store.beginTransaction();

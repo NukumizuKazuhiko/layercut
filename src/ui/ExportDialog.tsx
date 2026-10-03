@@ -8,6 +8,7 @@ import { compositeName, exportName } from "../export/naming";
 import { analyzeSvgSafety } from "../vector/svgSafety";
 import { readExportConfig, writeExportConfig, type StoredExportConfig } from "../project/exportConfig";
 import { TextField } from "./controls";
+import { isLayerOccluder } from "../layers/layerUtils";
 
 const SCALES = [1, 2, 4];
 
@@ -24,8 +25,8 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   const svgStatus = useMemo(() => {
     const visible = layers.filter((l) => l.visible);
     if (visible.length === 0) return { ok: false, reason: t("needLayers") };
-    if (visible.some((l) => l.type !== "svg")) return { ok: false, reason: t("svgOnlyAllSvg") };
-    for (const l of visible) {
+    if (layers.some((l) => isLayerOccluder(l) && l.type !== "svg")) return { ok: false, reason: t("svgOnlyAllSvg") };
+    for (const l of layers.filter(isLayerOccluder)) {
       const asset = l.assetId ? assets[l.assetId] : null;
       if (asset?.kind === "svg" && asset.svgText) {
         const safety = analyzeSvgSafety(asset.svgText);

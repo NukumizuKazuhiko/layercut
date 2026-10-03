@@ -25,6 +25,13 @@ export interface Layer {
   opacity: number;
   visible: boolean;
   locked: boolean;
+  /** Keep the current width/height ratio during numeric and canvas resizing. */
+  aspectLocked: boolean;
+  /** A hidden layer can still cut the layers below it. */
+  occludesWhenHidden: boolean;
+  /** Optional per-layer paint overrides; null keeps the imported SVG paint. */
+  svgFillColor?: string | null;
+  svgStrokeColor?: string | null;
 }
 
 export interface CanvasSettings {

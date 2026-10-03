@@ -3,6 +3,8 @@ import type { LayerAsset } from "../assets/assetStore";
 import { computeOcclusion, type OcclusionResult } from "../occlusion/OcclusionEngine";
 import { drawLayerToContext } from "../renderer/RasterRenderer";
 import { create2DCanvas } from "../utils/canvas";
+import { isLayerOccluder } from "../layers/layerUtils";
+import { assetForLayer } from "../vector/svgPaint";
 
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   return new Promise((resolve, reject) => {
@@ -37,9 +39,17 @@ export function rasterizeComposite(
     ctx.fillStyle = canvas.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
+  if (layers.some((layer) => !layer.visible && isLayerOccluder(layer))) {
+    const cut = computeOcclusion(layers, canvas, assets, scale);
+    for (const layer of layers) {
+      const raster = cut.byLayerId.get(layer.id);
+      if (raster) ctx.drawImage(raster, 0, 0, canvas.width, canvas.height);
+    }
+    return out;
+  }
   for (const layer of layers) {
     if (!layer.visible) continue;
-    const asset = layer.assetId ? assets[layer.assetId] ?? null : null;
+    const asset = assetForLayer(layer, assets);
     if (!asset) continue;
     drawLayerToContext(ctx, layer, asset);
   }

@@ -9,6 +9,7 @@ import paper from "paper";
 import { getPaper } from "./paperEnv";
 import type { LayerAsset } from "../assets/assetStore";
 import type { Layer } from "../layers/layerTypes";
+import { svgTextForLayer } from "./svgPaint";
 
 /** Materialize non-path items (symbols → placed definition, shapes → paths). */
 function materialize(item: paper.Item): paper.Item | null {
@@ -62,7 +63,7 @@ export function importLayerGeometry(asset: LayerAsset, layer: Layer): Normalized
 
   let imported: paper.Item;
   try {
-    imported = P.project.importSVG(asset.svgText, {
+    imported = P.project.importSVG(svgTextForLayer(asset, layer), {
       expandShapes: true,
       insert: false,
     }) as paper.Item;

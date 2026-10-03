@@ -4,8 +4,10 @@ import { useEditorStore } from "../layers/layerStore";
 import { useAssetStore } from "../assets/assetStore";
 import { validSelection } from "../layers/layerUtils";
 import type { Layer } from "../layers/layerTypes";
-import { clamp } from "../utils/geometry";
-import { CopyIcon, EyeIcon, EyeOffIcon, LockIcon, PlusIcon, TrashIcon, UnlockIcon } from "../ui/icons";
+import { mergeCurrentLayers } from "./mergeLayers";
+import { paintedAsset } from "../vector/svgPaint";
+import type { LayerAsset } from "../assets/assetStore";
+import { CopyIcon, EyeIcon, EyeOffIcon, LockIcon, OcclusionIcon, PlusIcon, TrashIcon, UnlockIcon } from "../ui/icons";
 
 /**
  * Layer panel. Rows display top → bottom (array is bottom → top).
@@ -20,6 +22,7 @@ export function LayerPanel({ width, collapsed }: { width: number; collapsed: boo
   const selectedIds = validSelection(layers, useEditorStore((s) => s.selectedIds));
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
+  const [merging, setMerging] = useState(false);
 
   const display = layers.map((layer, index) => ({ layer, index })).reverse();
 
@@ -51,10 +54,8 @@ export function LayerPanel({ width, collapsed }: { width: number; collapsed: boo
     }
     const len = layers.length;
     const from = len - 1 - drag.from;
-    // insertion point in array space (before array index len - overDisplay)
-    const insertAt = clamp(len - overDisplay, 0, len);
-    const adjusted = insertAt > from ? insertAt - 1 : insertAt;
-    useEditorStore.getState().reorder(from, adjusted);
+    // Moving down places after the target; moving up places before it.
+    useEditorStore.getState().reorder(from, len - 1 - overDisplay);
     setDrag(null);
   };
 
@@ -66,6 +67,25 @@ export function LayerPanel({ width, collapsed }: { width: number; collapsed: boo
       <div className="panel-title">
         {t("layers")}
         <span className="panel-actions">
+          <button
+            className="btn"
+            title={t("mergeLayersHint")}
+            disabled={layers.length < 2 || merging}
+            onClick={async () => {
+              setMerging(true);
+              try {
+                const merged = await mergeCurrentLayers(t("mergedLayerName"));
+                if (!merged) useEditorStore.getState().setNotice(t("mergeLayersUnavailable"));
+              } catch (error) {
+                console.error("Merge layers failed:", error);
+                useEditorStore.getState().setNotice(t("mergeLayersFailed"));
+              } finally {
+                setMerging(false);
+              }
+            }}
+          >
+            {merging ? t("mergingLayers") : t("mergeLayers")}
+          </button>
           <button
             className="icon-btn"
             title={t("addLayer")}
@@ -118,6 +138,9 @@ export function LayerPanel({ width, collapsed }: { width: number; collapsed: boo
             onToggleVisible={() =>
               useEditorStore.getState().updateLayer(layer.id, { visible: !layer.visible })
             }
+            onToggleOcclusion={() =>
+              useEditorStore.getState().updateLayer(layer.id, { occludesWhenHidden: !layer.occludesWhenHidden })
+            }
             onToggleLock={() =>
               useEditorStore.getState().updateLayer(layer.id, { locked: !layer.locked })
             }
@@ -154,6 +177,7 @@ function LayerRow({
   onStartRename,
   onEndRename,
   onToggleVisible,
+  onToggleOcclusion,
   onToggleLock,
   onMoveUp,
   onMoveDown,
@@ -163,7 +187,7 @@ function LayerRow({
   onDragEnd,
 }: {
   layer: Layer;
-  asset: { previewUrl: string } | null;
+  asset: LayerAsset | null;
   selected: boolean;
   renaming: boolean;
   dragging: boolean;
@@ -173,6 +197,7 @@ function LayerRow({
   onStartRename: () => void;
   onEndRename: (name: string) => void;
   onToggleVisible: () => void;
+  onToggleOcclusion: () => void;
   onToggleLock: () => void;
   onMoveUp?: () => void;
   onMoveDown?: () => void;
@@ -181,7 +206,18 @@ function LayerRow({
   onDrop: () => void;
   onDragEnd: () => void;
 }) {
+  const { t } = useI18n();
   const [nameDraft, setNameDraft] = useState(layer.name);
+  const [previewUrl, setPreviewUrl] = useState(asset?.previewUrl ?? "");
+  useEffect(() => {
+    let active = true;
+    if (!asset) { setPreviewUrl(""); return; }
+    setPreviewUrl(asset.kind === "svg" && (layer.svgFillColor || layer.svgStrokeColor) ? "" : asset.previewUrl);
+    paintedAsset(asset, layer).then((painted) => {
+      if (active) setPreviewUrl(painted.previewUrl);
+    }).catch((error) => console.error("SVG paint thumbnail failed", error));
+    return () => { active = false; };
+  }, [asset, layer.svgFillColor, layer.svgStrokeColor]);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // sync the draft whenever a rename session starts
@@ -216,7 +252,7 @@ function LayerRow({
       onDragEnd={onDragEnd}
     >
       <div className="thumb">
-        {asset ? <img src={asset.previewUrl} alt="" draggable={false} /> : <span className="thumb-empty" />}
+        {previewUrl ? <img src={previewUrl} alt="" draggable={false} /> : <span className="thumb-empty" />}
       </div>
       {renaming ? (
         <input
@@ -245,9 +281,21 @@ function LayerRow({
         className="icon-btn"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={onToggleVisible}
-        title={layer.visible ? "👁" : "🚫"}
+        title={t(layer.visible ? "hideLayer" : "showLayer")}
+        aria-label={t(layer.visible ? "hideLayer" : "showLayer")}
       >
         {layer.visible ? <EyeIcon /> : <EyeOffIcon />}
+      </button>
+      <button
+        className={`icon-btn${layer.occludesWhenHidden ? " active" : ""}`}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={onToggleOcclusion}
+        title={t(layer.occludesWhenHidden ? "hiddenOcclusionOn" : "hiddenOcclusionOff")}
+        aria-label={t(layer.occludesWhenHidden ? "hiddenOcclusionOn" : "hiddenOcclusionOff")}
+        aria-pressed={layer.occludesWhenHidden}
+        disabled={layer.type === "empty"}
+      >
+        <OcclusionIcon />
       </button>
       <button
         className="icon-btn"

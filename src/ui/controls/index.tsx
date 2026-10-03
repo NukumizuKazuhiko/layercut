@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes } from "react";
 import { round2 } from "../../utils/geometry";
 
@@ -108,6 +108,17 @@ export function SliderField({
   className?: string;
   disabled?: boolean;
 }) {
+  const active = useRef(false);
+  const start = () => {
+    if (active.current || disabled) return;
+    active.current = true;
+    onDragStart?.();
+  };
+  const finish = (v: number) => {
+    if (!active.current) return;
+    active.current = false;
+    onCommit?.(v);
+  };
   const pct = max > min ? ((value - min) / (max - min)) * 100 : 0;
   return (
     <input
@@ -119,12 +130,19 @@ export function SliderField({
       value={value}
       disabled={disabled}
       style={{ backgroundSize: `${pct}% 100%` }}
-      onPointerDown={() => onDragStart?.()}
-      onMouseDown={() => onDragStart?.()}
-      onChange={(e) => onChange(Number(e.target.value))}
-      onPointerUp={(e) => onCommit?.(Number(e.currentTarget.value))}
-      onMouseUp={(e) => onCommit?.(Number(e.currentTarget.value))}
-      onKeyUp={(e) => onCommit?.(Number(e.currentTarget.value))}
+      onPointerDown={(e) => {
+        start();
+        e.currentTarget.setPointerCapture(e.pointerId);
+      }}
+      onChange={(e) => {
+        start();
+        onChange(Number(e.target.value));
+      }}
+      onPointerUp={(e) => finish(Number(e.currentTarget.value))}
+      onPointerCancel={(e) => finish(Number(e.currentTarget.value))}
+      onLostPointerCapture={(e) => finish(Number(e.currentTarget.value))}
+      onKeyUp={(e) => finish(Number(e.currentTarget.value))}
+      onBlur={(e) => finish(Number(e.currentTarget.value))}
     />
   );
 }
@@ -134,11 +152,13 @@ export function ColorField({
   onChange,
   title,
   className = "",
+  disabled = false,
 }: {
   value: string;
   onChange: (v: string) => void;
   title?: string;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
     <input
@@ -146,6 +166,7 @@ export function ColorField({
       className={`ctl-color ${className}`}
       value={value}
       title={title}
+      disabled={disabled}
       onChange={(e) => onChange(e.target.value)}
     />
   );

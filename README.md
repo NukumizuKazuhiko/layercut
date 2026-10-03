@@ -13,15 +13,21 @@ Layer[i]_visible = Layer[i] − Union(All Visible Layers Above i)
 ## 功能（MVP 0.1 + 0.2）
 
 - **导入**：PNG / SVG（工具栏按钮或拖入画布；SVG 第一阶段按浏览器栅格化参与遮挡，保留矢量原文供第二阶段 Vector Boolean 使用）
-- **图层系统**：单选 / Shift、Ctrl 多选、拖拽或 ▲▼ 调整 Z 序、重命名（双击）、显示 / 隐藏、锁定 / 解锁、复制、删除、缩略图
-- **变换**：画布拖拽 / 缩放 / 旋转（Konva Transformer）、属性面板数值输入 X / Y / W / H / 旋转 / 不透明度、重置变换
-- **遮挡引擎**：Alpha 模式 `destination-out`，一次自顶向下扫描产出全部图层可见结果（预览与批量导出共享同一次计算）
+- **SVG 图层改色**：选中导入的 SVG 后，可在属性面板分别覆盖已有填充色和描边色，并可分别恢复原色。改色属于图层属性，支持撤销、工程保存以及普通/遮挡预览和 PNG/SVG 导出；原本为 `none` 的绘制通道保持不绘制，原始 SVG 素材不变。含复杂 CSS 样式的 SVG 仍受现有矢量安全限制。
+- **图案绘制（简单图形）**：工具栏的图案工具组可直接在画布上拖拽绘制 **矩形 / 椭圆 / 直线 / 多边形 / 星形**（快捷键 `R` / `O` / `L` / `P` / `S`，`V` 回到选择工具）。绘制结果是一张普通 SVG 图层（单个 `<path>`），因此**遮挡、双预览、PNG 导出、SVG 矢量导出、改色、工程保存全部沿用现有链路，工程文件格式不变**。拖拽修饰键：`Shift` 等比（正方形 / 正圆 / 45° 直线）、`Alt` 从中心绘制；`Esc` 取消本次绘制或退出工具；单击不拖拽会生成默认 200px 的图形。工具下方出现的选项行提供填充色 / 描边色（都可关闭）、描边宽度与边数（多边形 / 星形 3–12，星形内径比固定 0.5）。直线不填充；生成时 viewBox 按描边半宽外扩，描边不会被裁切。工具启用期间画布只用于绘制（图层不可拖动、不显示变换手柄、左键不平移，平移仍可用空格 / 中键 / 右键），退出工具后即可正常移动 / 缩放 / 旋转 / 改色 / 参与遮挡；几何在创建时烘焙进 SVG，不能回头改边数或圆角，需要就重画一个。
+- **图层系统**：单选 / Shift、Ctrl 多选、拖拽或 ▲▼ 调整 Z 序、重命名（双击）、显示 / 隐藏、隐藏时保留遮挡、锁定 / 解锁、复制、删除、缩略图。隐藏时保留遮挡独立于显示开关：该层本身不预览或单独导出，但仍裁切下方图层；旧工程默认关闭。
+- **合并**：图层面板的「合并」将当前整组图层的裁切结果按 Z 序烘焙为一张画布尺寸的透明 PNG，再以单个图层替换原图层；隐藏且保留遮挡的图层只贡献镂空，不绘制自身。合并是有损编辑，支持一步撤销恢复原图层；画布背景不写进 PNG。
+- **变换**：画布拖拽 / 缩放 / 旋转（Konva Transformer）、属性面板数值输入 X / Y / W / H / 旋转 / 不透明度、重置变换。首次导入并选中素材后即可拖动变换手柄，无需切换预览模式。单图层可切换长宽等比锁定；开启后修改宽、高或拖动缩放都会保持当前比例；旧工程默认关闭。
+- **遮挡引擎**：Alpha 模式 `destination-out`，一次自顶向下扫描产出全部图层可见结果（预览与批量导出共享同一次计算）；隐藏但保留遮挡的图层仅累积遮挡蒙版，不输出自身结果。
 - **双预览模式**：普通预览 / 遮挡预览（含爆炸视图滑杆，检查每层裁切后的实际输出）
 - **导出**：当前层 / 选中层 / 全部图层 / 合成图；1x / 2x / 4x / 自定义倍率；命名 `{序号}_{图层名}.png`；透明背景；优先调用系统「选择文件夹」保存，不支持时自动回退 ZIP 下载
-- **编辑体验**：Undo / Redo（一次拖拽 = 一步历史）、滚轮指向缩放、空格 / 中键平移、Fit（Ctrl+0）、对齐吸附（画布边缘 / 中心、其他图层边缘 / 中心）、快捷键
+- **编辑体验**：Undo / Redo（一次拖拽 = 一步历史）、滚轮指向缩放、空格 / 中键 / 右键拖动平移、Fit（Ctrl+0）、对齐吸附（画布边缘 / 中心、其他图层边缘 / 中心）、快捷键
 - **工程系统（MVP 0.3）**：**全屏工程控制台（起始页）**——启动软件默认进入，集中管理项目：新建工程（名称 + 画布预设 + 背景）、最近工程卡片墙（缩略图 / 打开 / 删除 / 从文件打开）、上次会话自动恢复横幅；编辑器中点击左上角 LayerCut 品牌返回控制台；保存 / 打开 `.layercut` 工程文件（JSON，全部素材以 base64 内嵌，跨设备可用）、自动保存（IndexedDB 防抖 1.5s）、导出配置记忆、标题栏与状态栏显示未保存状态（● / Ctrl+S 保存）
+- **工程保存的 PNG 来源**：导入时保留原始 PNG 文件 Blob；工程保存和自动保存直接读取原始字节，不依赖预览用 `blob:` URL 的网络请求。桌面版 CSP 禁止 `fetch(blob:)`，因此预览 URL 只能用于显示，不能作为保存真源。
+- **工程读取的内嵌素材**：`.layercut` 内的 base64 素材直接解码为 Blob；桌面版不通过受 CSP 限制的 `fetch(data:)` 读取。
+- **桌面工程保存**：桌面版弹出系统「另存为」对话框，选定 `.layercut` 路径后写入文件；取消或写入失败不会标记为已保存。Web 版继续使用浏览器下载。
 - **界面布局**：左右面板拖拽调宽（190–460px）、双击或箭头收起 / 展开，布局状态持久化；统一输入控件套件（`src/ui/controls`：文本 / 数字 / 滑杆 / 颜色拾取，焦点光晕、自绘滑杆填充、无原生 spinner），全部输入点共用一套视觉
-- **矢量管线（v0.4–v0.6）**：导出对话框可选 **SVG 矢量** 格式——每层输出 `Layer[i] − Union(上方可见层)` 的真实矢量结果（Paper.js 路径布尔，曲线保留、viewBox 与画布一致、可按倍率缩放）。条件：所有可见图层均为 SVG 且不含暂不支持元素（text / image / filter / mask / clipPath / pattern / style / SMIL 会禁用该选项）；图层中存在 PNG 时不可用（§7.3）。已知限制：布尔只作用于填充几何，描边保留但不会被遮挡裁切。
+- **矢量管线（v0.4–v0.6）**：导出对话框可选 **SVG 矢量** 格式——每层输出 `Layer[i] − Union(上方参与遮挡的图层)` 的真实矢量结果（Paper.js 路径布尔，曲线保留、viewBox 与画布一致、可按倍率缩放）。条件：参与输出或遮挡的图层均为 SVG 且不含暂不支持元素（text / image / filter / mask / clipPath / pattern / style / SMIL 会禁用该选项）；参与遮挡的 PNG 不可用（§7.3）。已知限制：布尔只作用于填充几何，描边保留但不会被遮挡裁切。
 - **中英双语**界面（右上角切换，记住偏好）
 
 ### 快捷键
@@ -33,8 +39,9 @@ Layer[i]_visible = Layer[i] − Union(All Visible Layers Above i)
 | Ctrl+D / Ctrl+A | 复制 / 全选 |
 | 方向键（+Shift） | 微调 1px（10px） |
 | Ctrl+= / Ctrl+- / Ctrl+0 | 放大 / 缩小 / 适配窗口 |
-| Space + 拖拽 / 中键拖拽 | 平移画布 |
-| Esc | 取消选择 |
+| V / R / O / L / P / S | 选择 / 矩形 / 椭圆 / 直线 / 多边形 / 星形工具 |
+| Space + 拖拽 / 中键拖拽 / 右键拖拽 | 平移画布 |
+| Esc | 取消选择（图案工具启用时先退出工具；绘制中取消本次绘制） |
 
 ## 运行
 
@@ -50,13 +57,15 @@ npm run app:build  # 桌面版构建
 **桌面应用（Tauri 2）**：`npm run app:build` 产出
 
 - 独立可执行文件 `src-tauri/target/release/layercut.exe`
-- NSIS 安装包 `src-tauri/target/release/bundle/nsis/LayerCut_0.1.0_x64-setup.exe`（按用户级安装，中文/英文安装界面）
+- NSIS 安装包 `src-tauri/target/release/bundle/nsis/LayerCut_0.4.1_x64-setup.exe`（按用户级安装，中文/英文安装界面）
 
 > 国内网络提示：Tauri 打包器首次会从 GitHub 下载 NSIS 工具包（`nsis-3.11.zip` 与 `nsis_tauri_utils-v0.5.3.dll`）。若 `github.com` 不可达，可经镜像（如 `https://ghfast.top/` 前缀）下载这两个文件，SHA1 分别为 `EF7FF767E5CBD9EDD22ADD3A32C9B8F4500BB10D`、`75197FEE3C6A814FE035788D1C34EAD39349B860`，将 zip 解压重命名为 `%LOCALAPPDATA%\tauri\NSIS`（makensis.exe 在其根目录），dll 放入 `NSIS\Plugins\x86-unicode\additional\` 后重新执行 `npm run app:build`。
 
 桌面版使用系统 WebView2（Windows 11 自带），安装包体积小，无需打包 Chromium。窗口配置 `dragDropEnabled: false` 以保留 HTML5 原生拖放导入；导出窗口可选择「选择文件夹」或「ZIP 压缩包」。文件夹选择依赖 WebView2 的 File System Access API，系统或敏感目录可能被拒绝；建议选择专用输出子目录，遇到限制可直接选择 ZIP 并解压到目标位置。取消文件夹选择不会记为导出成功，不支持文件夹选择时默认 ZIP。构建需要 Rust (MSVC) 工具链。
 
 桌面启动依赖正式构建的 `custom-protocol` feature。Vite 将 `paper` 的运行时入口统一映射到 `paper/dist/paper-core.js`：本项目只使用 JavaScript 矢量 API，不使用 PaperScript。默认的 `paper-full` 会在初始化时动态编译 PaperScript，被桌面 CSP 拦截后导致首页黑屏；保持当前 CSP 并使用 core 构建即可避免该初始化错误。修改构建配置后须重新执行 `npm run app:build`，已有 exe 不会自动更新。
+
+桌面开发启动使用 `npm run app:dev -- --no-watch`。Vite 不监视 `src-tauri/target/` 的 Rust 构建产物，避免 Windows 上监视临时可执行文件时触发 `EBUSY`；Cargo 构建依赖显式启用 `indexmap` 的 `std` feature，以满足 Tauri 依赖链中 `schemars` 的有序 Map 类型。
 
 要求现代浏览器 / WebView2（Chrome / Edge 最佳）。
 
@@ -78,8 +87,9 @@ Vite · React 18 · TypeScript · Konva.js（react-konva）· zustand · JSZip
 
 ```text
 src/
-├─ editor/     画布编辑器（Stage、视口缩放平移、Transformer、吸附、快捷键）
+├─ editor/     画布编辑器（Stage、视口缩放平移、Transformer、吸附、快捷键、图案绘制手势与预览）
 ├─ layers/     图层数据模型、store（含撤销历史）、图层面板
+├─ shapes/     图案绘制（纯几何 → 单 path SVG → 普通 svg 图层）
 ├─ assets/     源素材仓库（位图 / SVG 原文，独立于撤销历史）
 ├─ import/     PNG / SVG 导入
 ├─ renderer/   栅格化渲染
@@ -93,6 +103,7 @@ src/
 ## 设计说明
 
 - **非破坏性**：所有遮挡结果都是 Derived Data，源图层完整保留；移动上层后下层被挡区域实时重现。
+- **图案绘制的接入方式**：绘制的图形不是新的图层类型，而是一张按拖拽位置现算的单 `path` SVG，作为普通素材进入 `assetStore`，再包成一个普通 `svg` 图层。因此遮挡引擎、两种预览、PNG/SVG 导出、工程读写都不需要图案分支，源数据同样永不修改（图层改色仍是图层属性覆盖）。代价是几何在创建时烘焙，不支持回头改边数/圆角，需要就重新画一个。
 - **性能**：第一版主线程 + Canvas 足够（文档 §15）；遮挡引擎接口已按 `computeOcclusion(layers, canvas, assets, scale)` 收敛，后续可平移到 Web Worker + OffscreenCanvas。
 - **抗锯齿边缘**：Alpha 模式下，导出图层重新叠放时仅在形状抗锯齿边缘（半透明像素）与普通预览存在理论性差异，完全不透明区域像素级一致；实体制作场景可启用后续规划的 Binary 遮挡模式（接口已预留于 `occlusion/AlphaMask.ts`）。
 - **SVG**：第一阶段栅格化参与遮挡（导出 PNG 时按倍率重新栅格化保持清晰）；SVG Vector Boolean 见原规划第二阶段。
@@ -102,3 +113,13 @@ src/
 导出保存方式回归检查：`node scripts/export-regressions.cjs`，覆盖直接 ZIP、文件夹取消、无文件夹 API 和文件写入完成结果。
 
 `scripts/make-fixtures.mjs` 生成 `fixtures/`（3 张带透明通道的 PNG + 1 个 SVG），可用于手工验收：导入 → 任意变换 → 遮挡预览 → 批量导出 → 将导出图层按原坐标叠放，与普通预览对比。
+
+隐藏遮挡、等比锁定及合并透明孔洞回归：运行 `npm run dev` 后打开 `http://localhost:5173/scripts/layer-visibility-regressions.html`，应显示 `passed` 与 `total` 相等。
+
+画布平移回归：打开 `http://localhost:5173/scripts/canvas-pan-regressions.html`，检查右键拖动、中键拖动、普通左键拖动和「图案工具启用时左键拖动」四项均通过。
+
+图案绘制回归：打开 `http://localhost:5173/scripts/shape-regressions.html`，应显示 `PASS`。覆盖纯几何（矩形 / 椭圆 / 直线 / 多边形 / 星形、描边外扩、反向拖拽、边数钳制）、拖拽修饰键、栅格与遮挡像素、Paper.js 矢量导出、工具状态不入历史、撤销/重做与工程往返。
+
+工程保存回归：`node scripts/project-blob-regressions.cjs` 验证桌面 CSP 下的 PNG 原始字节保存；`node scripts/project-regressions.cjs` 验证工程历史、读入校验与自动保存。
+
+已知构建提示：Vite 对现有约 851 kB 的主包给出 500 kB 分包建议；该提示不影响本轮功能与构建，但主包拆分需独立性能验收。

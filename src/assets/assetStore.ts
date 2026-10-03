@@ -14,6 +14,8 @@ export interface LayerAsset {
   naturalHeight: number;
   /** decoded PNG bitmap, or the rasterized <img> for SVG */
   bitmap: ImageBitmap | HTMLImageElement;
+  /** Original imported PNG bytes; project saving must not fetch the preview blob URL. */
+  sourceBlob?: Blob;
   /** SVG text, kept for Phase 2 vector boolean + re-rasterization */
   svgText?: string;
   /** blob URL for the SVG source (also used as panel thumbnail) */

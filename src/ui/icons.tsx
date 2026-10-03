@@ -40,6 +40,12 @@ export const EyeOffIcon = ({ size }: IconProps) =>
     size
   );
 
+export const AspectLockIcon = ({ size }: IconProps) =>
+  svg(<><path d="M6 5H4a2 2 0 0 0 0 4h2M10 5h2a2 2 0 0 1 0 4h-2M5.5 7h5" /></>, size);
+
+export const OcclusionIcon = ({ size }: IconProps) =>
+  svg(<><rect x="2" y="2" width="8" height="8" rx="1" /><path d="M6 12h7V5M9 13h4" /></>, size);
+
 export const LockIcon = ({ size }: IconProps) =>
   svg(
     <>
@@ -148,3 +154,30 @@ export const GridIcon = ({ size }: IconProps) =>
     </>,
     size
   );
+
+/* ---------- Drawing tools ---------- */
+
+export const SelectIcon = ({ size }: IconProps) =>
+  svg(<path d="M4 2.5l8.5 6.4-3.8.4-1.7 3.7z" />, size);
+
+export const RectIcon = ({ size }: IconProps) =>
+  svg(<rect x="2.5" y="4" width="11" height="8" rx="1" />, size);
+
+export const EllipseIcon = ({ size }: IconProps) =>
+  svg(<ellipse cx="8" cy="8" rx="5.5" ry="4" />, size);
+
+export const LineIcon = ({ size }: IconProps) =>
+  svg(
+    <>
+      <path d="M3.4 12.6L12.6 3.4" />
+      <circle cx="3.4" cy="12.6" r="1.3" />
+      <circle cx="12.6" cy="3.4" r="1.3" />
+    </>,
+    size
+  );
+
+export const PolygonIcon = ({ size }: IconProps) =>
+  svg(<path d="M8 2.3l4.9 2.9v5.6L8 13.7l-4.9-2.9V5.2z" />, size);
+
+export const StarIcon = ({ size }: IconProps) =>
+  svg(<path d="M8 2.4l1.75 3.6 3.95.55-2.85 2.8.67 3.95L8 11.4l-3.52 1.9.67-3.95L2.3 6.55l3.95-.55z" />, size);

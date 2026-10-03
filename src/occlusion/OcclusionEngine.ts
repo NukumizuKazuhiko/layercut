@@ -3,6 +3,8 @@ import type { LayerAsset } from "../assets/assetStore";
 import { rasterizeLayer } from "../renderer/RasterRenderer";
 import { create2DCanvas } from "../utils/canvas";
 import { applyMaskToContext } from "./AlphaMask";
+import { isLayerOccluder } from "../layers/layerUtils";
+import { assetForLayer } from "../vector/svgPaint";
 
 export interface OcclusionResult {
   /** Final visible raster per layer id, full-canvas size, transform baked in. */
@@ -42,8 +44,8 @@ export function computeOcclusion(
   const visible: { layer: Layer; raster: HTMLCanvasElement }[] = [];
   for (let i = layers.length - 1; i >= 0; i--) {
     const layer = layers[i];
-    if (!layer.visible) continue;
-    const asset = layer.assetId ? assets[layer.assetId] ?? null : null;
+    if (!isLayerOccluder(layer)) continue;
+    const asset = assetForLayer(layer, assets);
     const raster = rasterizeLayer(layer, asset, W, H, scale);
     if (!raster) continue;
     visible.push({ layer, raster });
@@ -58,7 +60,7 @@ export function computeOcclusion(
     ctx.drawImage(raster, 0, 0);
     // at this point the mask holds exactly the layers strictly above this one
     applyMaskToContext(ctx, mask.canvas);
-    byLayerId.set(layer.id, result.canvas);
+    if (layer.visible) byLayerId.set(layer.id, result.canvas);
     // accumulate this layer's full alpha into the occluder mask
     mask.ctx.save();
     mask.ctx.setTransform(1, 0, 0, 1, 0, 0);

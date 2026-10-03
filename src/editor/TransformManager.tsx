@@ -11,8 +11,10 @@ import type { AABB } from "../utils/geometry";
  */
 export function SelectionTransformer({
   nodeRefs,
+  nodeRevision,
 }: {
   nodeRefs: React.MutableRefObject<Record<string, Konva.Image | null>>;
+  nodeRevision: number;
 }) {
   const trRef = useRef<Konva.Transformer>(null);
 
@@ -24,6 +26,10 @@ export function SelectionTransformer({
     );
     return valid.filter((id) => eligible.has(id)).join(",");
   });
+  const keepRatio = useEditorStore((s) => {
+    const eligible = s.layers.filter((l) => s.selectedIds.includes(l.id) && l.visible && !l.locked);
+    return eligible.length === 1 && eligible[0].aspectLocked === true;
+  });
 
   useEffect(() => {
     const tr = trRef.current;
@@ -34,13 +40,14 @@ export function SelectionTransformer({
       .filter((n): n is Konva.Image => Boolean(n));
     tr.nodes(nodes);
     tr.getLayer()?.batchDraw();
-  }, [attachIdsKey, nodeRefs]);
+  }, [attachIdsKey, nodeRefs, nodeRevision]);
 
   return (
     <Transformer
       ref={trRef}
       rotateEnabled
-      keepRatio={false}
+      keepRatio={keepRatio}
+      shiftBehavior="none"
       anchorSize={9}
       anchorCornerRadius={2}
       anchorStroke="#4f8cff"

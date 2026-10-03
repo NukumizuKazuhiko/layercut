@@ -13,6 +13,10 @@ export function findLayer(layers: Layer[], id: string): Layer | undefined {
   return layers.find((l) => l.id === id);
 }
 
+export function isLayerOccluder(layer: Layer): boolean {
+  return layer.visible || layer.occludesWhenHidden === true;
+}
+
 export function layerNaturalSize(asset: LayerAsset | null): { width: number; height: number } | null {
   if (!asset) return null;
   return { width: asset.naturalWidth, height: asset.naturalHeight };
@@ -41,16 +45,20 @@ export function makeLayer(opts: {
   assetId: string | null;
   canvas: CanvasSettings;
   natural?: { width: number; height: number } | null;
+  /** Exact placement, for callers that know where the layer must land (drawn shapes). */
+  transform?: Layer["transform"];
 }): Layer {
   return {
     id: uid("layer"),
     name: opts.name,
     type: opts.type,
     assetId: opts.assetId,
-    transform: initialTransform(opts.canvas, opts.natural ?? { width: 0, height: 0 }),
+    transform: opts.transform ?? initialTransform(opts.canvas, opts.natural ?? { width: 0, height: 0 }),
     opacity: 1,
     visible: true,
     locked: false,
+    aspectLocked: false,
+    occludesWhenHidden: false,
   };
 }
 

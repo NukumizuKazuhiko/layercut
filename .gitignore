@@ -16,3 +16,7 @@ Thumbs.db
 
 # agent session metadata
 .zcode/
+.workbuddy/
+
+# session scratch / debug artifacts
+/_*

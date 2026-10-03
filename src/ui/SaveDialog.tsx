@@ -13,11 +13,11 @@ export function SaveDialog({ onClose }: { onClose: () => void }) {
   const save = async () => {
     setBusy(true);
     try {
-      await saveProjectAs(name);
-      onClose();
+      if (await saveProjectAs(name)) onClose();
+      else setBusy(false);
     } catch (e) {
       console.error(e);
-      useEditorStore.getState().setNotice(`⚠ ${t("openFailed")}`);
+      useEditorStore.getState().setNotice(`⚠ ${t("saveFailed")}`);
       setBusy(false);
     }
   };

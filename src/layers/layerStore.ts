@@ -2,6 +2,14 @@ import { create } from "zustand";
 import type { CanvasSettings, Layer, PreviewMode, ProjectSnapshot } from "./layerTypes";
 import { duplicateLayer, validSelection } from "./layerUtils";
 import { uid } from "../utils/id";
+import {
+  DEFAULT_SHAPE_STYLE,
+  DEFAULT_SIDES,
+  SIDES_MAX,
+  SIDES_MIN,
+  type EditorTool,
+  type ShapeStyle,
+} from "../shapes/shapeTypes";
 const HISTORY_LIMIT = 100;
 
 function snap(s: EditorState): ProjectSnapshot {
@@ -36,20 +44,31 @@ interface EditorState extends ProjectSnapshot {
   notice: string | null;
   canUndo: boolean;
   canRedo: boolean;
+  /** Active tool: "select" edits existing layers, a shape kind draws a new one. */
+  activeTool: EditorTool;
+  /** Style applied to the next drawn shape. */
+  shapeStyle: ShapeStyle;
+  /** Corner count of the polygon tool / point count of the star tool. */
+  shapeSides: number;
   /** current project display name ("" = untitled) */
   projectName: string;
   /** bumped on every committed content change (incl. undo/redo) */
   historyVersion: number;
   /** historyVersion at the last explicit save / load — dirty = version > savedVersion */
   savedVersion: number;
+  /** Changes when the current document is replaced; guards asynchronous saves. */
+  documentEpoch: number;
 
   // view actions
   setPreviewMode: (mode: PreviewMode) => void;
   setExplodeAmount: (v: number) => void;
   toggleSnap: () => void;
+  setActiveTool: (tool: EditorTool) => void;
+  setShapeStyle: (patch: Partial<ShapeStyle>) => void;
+  setShapeSides: (sides: number) => void;
   setNotice: (msg: string | null) => void;
   setProjectName: (name: string) => void;
-  markSaved: () => void;
+  markSaved: (version?: number, documentEpoch?: number) => void;
   /** replace the whole document (open project / recovery) */
   loadProject: (doc: { canvas: CanvasSettings; layers: Layer[]; name: string }) => void;
 
@@ -73,15 +92,18 @@ interface EditorState extends ProjectSnapshot {
 
   // layers (commit = push an undo step; false = transient, e.g. mid-drag)
   addLayers: (layers: Layer[], select?: boolean) => void;
+  replaceAllLayers: (expected: { layers: Layer[]; canvas: CanvasSettings; historyVersion: number; documentEpoch: number }, layer: Layer) => boolean;
   addEmptyLayer: (name?: string) => void;
   deleteSelected: () => void;
   duplicateSelected: () => void;
   updateLayer: (id: string, patch: Partial<Layer>, commit?: boolean) => void;
+  setSvgPaintColor: (id: string, channel: "svgFillColor" | "svgStrokeColor", color: string | null) => void;
   updateLayerTransform: (
     id: string,
     t: Partial<Layer["transform"]>,
     commit?: boolean
   ) => void;
+  setLayerDimension: (id: string, axis: "width" | "height", value: number, natural: { width: number; height: number }) => void;
   setLayersOpacity: (ids: string[], opacity: number, commit?: boolean) => void;
   reorder: (fromIndex: number, toIndex: number) => void;
   moveLayerToTop: (id: string) => void;
@@ -112,10 +134,36 @@ export function hasPendingTransaction(): boolean {
   return history.pending !== null;
 }
 
+// ---------------------------------------------------------------------------
+// Shape tool input validation. Tool settings are user input that ends up inside
+// generated SVG markup, so colours are re-checked here before they are stored.
+// ---------------------------------------------------------------------------
+const HEX_COLOR = /^#[0-9a-f]{6}$/i;
+
+function safeColor(value: string | null): string | null {
+  if (value === null) return null;
+  return HEX_COLOR.test(value) ? value.toLowerCase() : null;
+}
+
+function safeStrokeWidth(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(200, Math.max(0, Math.round(value * 100) / 100));
+}
+
+function safeSides(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_SIDES;
+  return Math.min(SIDES_MAX, Math.max(SIDES_MIN, Math.round(value)));
+}
+
 export const useEditorStore = create<EditorState>((set, get) => {
   /** Apply committed (undoable) mutation. */
   const commitSet = (fn: (s: EditorState) => Partial<EditorState>) => {
-    set((s) => ({ ...pushHistory(s), ...fn(s), historyVersion: s.historyVersion + 1 }));
+    set((s) => {
+      const patch = fn(s);
+      const next = { ...s, ...patch };
+      if (sameSnapshot(snap(s), snap(next)) && s.documentEpoch === next.documentEpoch) return s;
+      return { ...pushHistory(s), ...patch, historyVersion: s.historyVersion + 1 };
+    });
   };
   /** Apply transient mutation (no history entry). */
   const liveSet = (fn: (s: EditorState) => Partial<EditorState>) => {
@@ -133,19 +181,57 @@ export const useEditorStore = create<EditorState>((set, get) => {
     notice: null,
     canUndo: false,
     canRedo: false,
+    activeTool: "select",
+    shapeStyle: DEFAULT_SHAPE_STYLE,
+    shapeSides: DEFAULT_SIDES,
     projectName: "",
     historyVersion: 0,
     savedVersion: 0,
+    documentEpoch: 0,
 
-    setPreviewMode: (mode) => set({ previewMode: mode }),
+    setPreviewMode: (mode) =>
+      // Drawing is a normal-preview interaction; leaving it disarms the tool
+      // instead of letting a hidden shape land while the user inspects cuts.
+      set(mode === "occlusion" ? { previewMode: mode, activeTool: "select" } : { previewMode: mode }),
     setExplodeAmount: (v) => set({ explodeAmount: v }),
     toggleSnap: () => set((s) => ({ snapEnabled: !s.snapEnabled })),
+    setActiveTool: (tool) =>
+      // Arming a shape tool also returns to normal preview: drawing is a
+      // normal-mode interaction, so the tool must never look armed and do nothing.
+      set((s) =>
+        s.activeTool === tool && (s.previewMode === "normal" || tool === "select")
+          ? s
+          : { activeTool: tool, previewMode: tool === "select" ? s.previewMode : "normal" }
+      ),
+    setShapeStyle: (patch) =>
+      set((s) => {
+        const next: ShapeStyle = {
+          fill: patch.fill !== undefined ? safeColor(patch.fill) : s.shapeStyle.fill,
+          stroke: patch.stroke !== undefined ? safeColor(patch.stroke) : s.shapeStyle.stroke,
+          strokeWidth:
+            patch.strokeWidth !== undefined
+              ? safeStrokeWidth(patch.strokeWidth)
+              : s.shapeStyle.strokeWidth,
+        };
+        const same =
+          next.fill === s.shapeStyle.fill &&
+          next.stroke === s.shapeStyle.stroke &&
+          next.strokeWidth === s.shapeStyle.strokeWidth;
+        return same ? s : { shapeStyle: next };
+      }),
+    setShapeSides: (sides) => {
+      const next = safeSides(sides);
+      set((s) => (s.shapeSides === next ? s : { shapeSides: next }));
+    },
     setNotice: (msg) => set({ notice: msg }),
     setProjectName: (name) => set({ projectName: name }),
-    markSaved: () => set({ savedVersion: get().historyVersion }),
+    markSaved: (version = get().historyVersion, documentEpoch = get().documentEpoch) => {
+      if (documentEpoch !== get().documentEpoch) return;
+      set({ savedVersion: version });
+    },
     loadProject: ({ canvas, layers, name }) => {
-      commitSet(() => ({ canvas, layers, selectedIds: [] }));
-      set({ projectName: name, savedVersion: get().historyVersion });
+      commitSet((s) => ({ canvas, layers, selectedIds: [], documentEpoch: s.documentEpoch + 1 }));
+      set({ projectName: name, savedVersion: get().historyVersion, activeTool: "select" });
     },
 
     setSelection: (ids_) => set({ selectedIds: ids_ }),
@@ -197,13 +283,22 @@ export const useEditorStore = create<EditorState>((set, get) => {
     setCanvasBackground: (background) =>
       commitSet((s) => ({ canvas: { ...s.canvas, background } })),
     newCanvas: (canvas) =>
-      commitSet(() => ({ canvas, layers: [], selectedIds: [] })),
+      commitSet((s) => ({ canvas, layers: [], selectedIds: [], documentEpoch: s.documentEpoch + 1 })),
+    // note: newCanvas keeps the active tool — a fresh canvas is exactly when
+    // drawing is most likely to be the next action.
 
     addLayers: (layers, select = true) =>
       commitSet((s) => ({
         layers: [...s.layers, ...layers],
         selectedIds: select ? layers.map((l) => l.id) : s.selectedIds,
       })),
+    replaceAllLayers: (expected, layer) => {
+      const s = get();
+      if (history.pending || s.layers !== expected.layers || s.canvas !== expected.canvas ||
+          s.historyVersion !== expected.historyVersion || s.documentEpoch !== expected.documentEpoch) return false;
+      commitSet(() => ({ layers: [layer], selectedIds: [layer.id] }));
+      return true;
+    },
     addEmptyLayer: (name) =>
       commitSet((s) => {
         const layer: Layer = {
@@ -215,6 +310,8 @@ export const useEditorStore = create<EditorState>((set, get) => {
           opacity: 1,
           visible: true,
           locked: false,
+          aspectLocked: false,
+          occludesWhenHidden: false,
         };
         return { layers: [...s.layers, layer], selectedIds: [layer.id] };
       }),
@@ -245,17 +342,46 @@ export const useEditorStore = create<EditorState>((set, get) => {
       });
       commit ? commitSet(apply) : liveSet(apply);
     },
+    setSvgPaintColor: (id, channel, color) => {
+      if (color !== null && !/^#[0-9a-f]{6}$/i.test(color)) return;
+      commitSet((s) => ({
+        layers: s.layers.map((layer) => layer.id === id && layer.type === "svg" && !layer.locked
+          ? { ...layer, [channel]: color }
+          : layer),
+      }));
+    },
     updateLayerTransform: (id, t, commit = true) => {
       const apply = (s: EditorState): Partial<EditorState> => ({
         layers: s.layers.map((l) =>
-          l.id === id ? { ...l, transform: { ...l.transform, ...t } } : l
+          l.id === id && !l.locked ? { ...l, transform: { ...l.transform, ...t } } : l
         ),
       });
       commit ? commitSet(apply) : liveSet(apply);
     },
+    setLayerDimension: (id, axis, value, natural) => {
+      if (!Number.isFinite(value) || value <= 0 || natural.width <= 0 || natural.height <= 0) return;
+      commitSet((s) => ({
+        layers: s.layers.map((layer) => {
+          if (layer.id !== id || layer.locked) return layer;
+          const current = layer.transform;
+          const primary = axis === "width" ? "scaleX" : "scaleY";
+          const secondary = axis === "width" ? "scaleY" : "scaleX";
+          const nextScale = value / natural[axis];
+          const ratio = current[primary] === 0 ? 1 : nextScale / current[primary];
+          return {
+            ...layer,
+            transform: {
+              ...current,
+              [primary]: nextScale,
+              ...(layer.aspectLocked ? { [secondary]: current[secondary] * ratio } : {}),
+            },
+          };
+        }),
+      }));
+    },
     setLayersOpacity: (ids_, opacity, commit = true) => {
       const apply = (s: EditorState): Partial<EditorState> => ({
-        layers: s.layers.map((l) => (ids_.includes(l.id) ? { ...l, opacity } : l)),
+        layers: s.layers.map((l) => (ids_.includes(l.id) && !l.locked ? { ...l, opacity } : l)),
       });
       commit ? commitSet(apply) : liveSet(apply);
     },
@@ -290,7 +416,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
         if (ids_.length === 0) return {};
         return {
           layers: s.layers.map((l) =>
-            ids_.includes(l.id)
+            ids_.includes(l.id) && !l.locked
               ? { ...l, transform: { ...l.transform, x: l.transform.x + dx, y: l.transform.y + dy } }
               : l
           ),

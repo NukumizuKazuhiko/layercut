@@ -1,6 +1,7 @@
 import type { Layer } from "../layers/layerTypes";
 import type { LayerAsset } from "../assets/assetStore";
 import { create2DCanvas } from "../utils/canvas";
+import { isLayerOccluder } from "../layers/layerUtils";
 
 /**
  * Rasterize one layer (with its transform + opacity baked in) into a
@@ -13,7 +14,7 @@ export function rasterizeLayer(
   canvasH: number,
   scale: number
 ): HTMLCanvasElement | null {
-  if (!asset || !layer.visible || layer.opacity <= 0) return null;
+  if (!asset || !isLayerOccluder(layer) || layer.opacity <= 0) return null;
   const { canvas, ctx } = create2DCanvas(canvasW * scale, canvasH * scale);
   ctx.scale(scale, scale);
   drawLayerToContext(ctx, layer, asset);
