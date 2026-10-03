@@ -916,6 +916,14 @@ input[type="color"] {
   width: 110px;
 }
 
+.file-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 24px;
+}
+
 .file-list {
   border: 1px solid var(--border-soft);
   border-radius: 6px;
@@ -927,11 +935,34 @@ input[type="color"] {
 }
 
 .file-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-family: Consolas, "Courier New", monospace;
   font-size: 11.5px;
   color: var(--text-dim);
   padding: 1px 0;
   white-space: nowrap;
+}
+
+.file-item .file-name-input {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 6px;
+  font-family: inherit;
+  font-size: 11.5px;
+}
+
+.file-ext {
+  flex-shrink: 0;
+}
+
+.file-resolved {
+  flex-shrink: 0;
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dialog-note {

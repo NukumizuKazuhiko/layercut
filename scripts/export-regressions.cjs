@@ -28,8 +28,21 @@ function harness(picker, layers = []) {
       validSelection: () => [],
       isLayerOccluder: l => l.visible || l.occludesWhenHidden === true,
     },
-    './exportPNG': { canvasToBlob: async () => blob, rasterizeComposite: () => ({}) },
-    './naming': { compositeName: () => 'composite.png', exportName: (i, name) => `Layer${i}_${name}.svg` },
+    './exportPNG': {
+      canvasToBlob: async () => blob,
+      rasterizeComposite: () => ({}),
+      exportableLayers: ls => ls.map((layer, index) => ({ layer, index })).filter(({ layer }) => layer.visible),
+    },
+    './naming': {
+      COMPOSITE_NAME_KEY: 'composite',
+      normalizedBase: value => (typeof value === 'string' && value.trim() !== '' ? value : undefined),
+      compositeBaseName: () => 'layercut_composite',
+      compositeName: () => 'layercut_composite.png',
+      defaultBaseName: (index, name) => `${String(index).padStart(3, '0')}_${String(name ?? 'layer')}`,
+      // These cases assert the save destination, not name disambiguation; the
+      // real dedupe/rename rules are covered by scripts/export-naming-regressions.html.
+      resolveFileNames: (bases, ext) => bases.map(base => `${base}.${ext}`),
+    },
     '../vector/svgSafety': { analyzeSvgSafety: () => ({ safe: true }) },
     '../vector/svgBoolean': {
       // Gate tests only care about reaching the vector engine, not its result.

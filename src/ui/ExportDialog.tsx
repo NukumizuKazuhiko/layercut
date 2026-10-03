@@ -3,8 +3,14 @@ import { useI18n } from "../i18n";
 import { useEditorStore } from "../layers/layerStore";
 import { useAssetStore } from "../assets/assetStore";
 import { validSelection } from "../layers/layerUtils";
-import { exportLayers, type ExportDestination, type ExportFormat, type ExportScope } from "../export/exportAll";
-import { compositeName, exportName } from "../export/naming";
+import {
+  exportLayers,
+  planExportFiles,
+  type ExportDestination,
+  type ExportFormat,
+  type ExportScope,
+} from "../export/exportAll";
+import type { FileNameOverrides } from "../export/naming";
 import { analyzeSvgSafety } from "../vector/svgSafety";
 import { readExportConfig, writeExportConfig, type StoredExportConfig } from "../project/exportConfig";
 import { TextField } from "./controls";
@@ -63,15 +69,14 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   const ext = format === "svg" ? "svg" : "png";
   const svgDisabled = format === "svg" && (!svgStatus.ok || scope === "composite");
 
-  const fileNames = useMemo(() => {
-    if (scope === "composite") return ext === "png" ? [compositeName()] : [];
-    let targets = layers.map((layer, index) => ({ layer, index })).filter(({ layer }) => layer.visible);
-    if (scope === "current" || scope === "selected") {
-      const ids = new Set(selectedIds);
-      targets = targets.filter(({ layer }) => ids.has(layer.id));
-    }
-    return targets.map(({ layer, index }) => exportName(index + 1, layer.name, ext));
-  }, [scope, layers, selectedIds, ext]);
+  // Renames are kept per output key (layer id, or "composite") and survive
+  // scope/format changes, so switching format only swaps the extension.
+  const [overrides, setOverrides] = useState<FileNameOverrides>({});
+  const plan = useMemo(
+    () => planExportFiles({ layers, selectedIds, scope, ext, overrides }),
+    [layers, selectedIds, scope, ext, overrides]
+  );
+  const renamed = Object.keys(overrides).length > 0;
 
   const scopeOptions: { value: ExportScope; label: string; disabled: boolean }[] = [
     { value: "current", label: t("scopeCurrent"), disabled: selectedIds.length !== 1 },
@@ -84,8 +89,13 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
     setBusy(true);
     setProgress(t("exporting"));
     try {
-      const result = await exportLayers(scope, effectiveScale, format, (done, total) =>
-        setProgress(`${t("exporting")} ${done}/${total}`), destination
+      const result = await exportLayers(
+        scope,
+        effectiveScale,
+        format,
+        (done, total) => setProgress(`${t("exporting")} ${done}/${total}`),
+        destination,
+        overrides
       );
       if (result === "cancelled") setProgress(t("exportCancelled"));
       else {
@@ -105,7 +115,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   };
 
   const canExport =
-    scope === "composite" ? visibleCount > 0 && format === "png" : fileNames.length > 0 && !svgDisabled;
+    scope === "composite" ? visibleCount > 0 && format === "png" : plan.length > 0 && !svgDisabled;
 
   return (
     <div className="dialog-overlay" onMouseDown={onClose}>
@@ -188,15 +198,51 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           )}
         </div>
 
-        <div className="field-label">{t("filePreview")}</div>
+        <div className="file-list-head">
+          <span className="field-label">{t("filePreview")}</span>
+          {renamed && (
+            <button className="btn small" type="button" disabled={busy} onClick={() => setOverrides({})}>
+              {t("exportResetNames")}
+            </button>
+          )}
+        </div>
         <div className="file-list">
-          {fileNames.length === 0 ? (
+          {plan.length === 0 ? (
             <span className="muted">{visibleCount === 0 ? t("needLayers") : t("needSelection")}</span>
           ) : (
-            fileNames.map((n) => <div key={n} className="file-item">{n}</div>)
+            plan.map((file) => {
+              const edited = overrides[file.key];
+              const shown = edited !== undefined ? edited : file.base;
+              return (
+                <div key={file.key} className="file-item">
+                  <TextField
+                    className="file-name-input"
+                    value={shown}
+                    disabled={busy}
+                    spellCheck={false}
+                    aria-label={t("exportFileName")}
+                    title={t("exportFileName")}
+                    onChange={(e) =>
+                      setOverrides((prev) => ({ ...prev, [file.key]: e.target.value }))
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    }}
+                  />
+                  <span className="file-ext">.{ext}</span>
+                  {`${shown}.${ext}` !== file.fileName && (
+                    <span className="file-resolved" title={file.fileName}>
+                      → {file.fileName}
+                    </span>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
         <p className="dialog-note">
+          {t("exportNameHint")}
+          <br />
           {format === "svg"
             ? t("svgOnlyAllSvg")
             : destination === "folder"
