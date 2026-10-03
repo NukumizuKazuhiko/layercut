@@ -5,9 +5,19 @@ const ts = require('typescript');
 
 const source = fs.readFileSync(path.join(__dirname, '..', 'src/project/projectTypes.ts'), 'utf8');
 const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+// projectTypes reaches for the shared hex validator; transpile it for real.
+const colorJs = ts.transpileModule(
+  fs.readFileSync(path.join(__dirname, '..', 'src/utils/color.ts'), 'utf8'),
+  { compilerOptions: { module: ts.ModuleKind.CommonJS } }
+).outputText;
+const colorUtils = {};
+new Function('require', 'exports', colorJs)(() => {}, colorUtils);
 const projectTypes = {};
 new Function('require', 'exports', 'fetch', js)(
-  () => { throw new Error('unexpected module import'); },
+  name => {
+    if (name === '../utils/color') return colorUtils;
+    throw new Error('unexpected module import');
+  },
   projectTypes,
   () => { throw new Error('CSP blocked fetch(blob:)'); },
 );

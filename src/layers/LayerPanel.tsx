@@ -5,7 +5,7 @@ import { useAssetStore } from "../assets/assetStore";
 import { validSelection } from "../layers/layerUtils";
 import type { Layer } from "../layers/layerTypes";
 import { mergeCurrentLayers } from "./mergeLayers";
-import { paintedAsset } from "../vector/svgPaint";
+import { usePaintedAsset } from "../vector/usePaintedAsset";
 import type { LayerAsset } from "../assets/assetStore";
 import { CopyIcon, EyeIcon, EyeOffIcon, LockIcon, OcclusionIcon, PlusIcon, TrashIcon, UnlockIcon } from "../ui/icons";
 
@@ -208,16 +208,7 @@ function LayerRow({
 }) {
   const { t } = useI18n();
   const [nameDraft, setNameDraft] = useState(layer.name);
-  const [previewUrl, setPreviewUrl] = useState(asset?.previewUrl ?? "");
-  useEffect(() => {
-    let active = true;
-    if (!asset) { setPreviewUrl(""); return; }
-    setPreviewUrl(asset.kind === "svg" && (layer.svgFillColor || layer.svgStrokeColor) ? "" : asset.previewUrl);
-    paintedAsset(asset, layer).then((painted) => {
-      if (active) setPreviewUrl(painted.previewUrl);
-    }).catch((error) => console.error("SVG paint thumbnail failed", error));
-    return () => { active = false; };
-  }, [asset, layer.svgFillColor, layer.svgStrokeColor]);
+  const previewUrl = usePaintedAsset(asset, layer)?.previewUrl ?? "";
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   // sync the draft whenever a rename session starts

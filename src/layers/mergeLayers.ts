@@ -4,7 +4,7 @@ import { computeOcclusion } from "../occlusion/OcclusionEngine";
 import { create2DCanvas } from "../utils/canvas";
 import { uid } from "../utils/id";
 import { hasPendingTransaction, useEditorStore } from "./layerStore";
-import type { CanvasSettings, Layer } from "./layerTypes";
+import type { CanvasSettings, DocumentSnapshot, Layer } from "./layerTypes";
 import { paintedAssetsForLayers } from "../vector/svgPaint";
 
 /** Bake the cut results, without the editor's paper/background, into transparent pixels. */
@@ -26,7 +26,7 @@ export function rasterizeMergedLayers(
 export async function mergeCurrentLayers(name: string): Promise<boolean> {
   const state = useEditorStore.getState();
   if (state.layers.length < 2 || hasPendingTransaction()) return false;
-  const expected = {
+  const expected: DocumentSnapshot = {
     layers: state.layers, canvas: state.canvas,
     historyVersion: state.historyVersion, documentEpoch: state.documentEpoch,
   };

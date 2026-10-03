@@ -8,7 +8,12 @@ function load(file, mocks = {}, globals = {}) {
   const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
   const exports = {};
   new Function('require', 'exports', ...Object.keys(globals), js)(
-    name => { if (!(name in mocks)) throw new Error(`Missing mock: ${name}`); return mocks[name]; },
+    name => {
+      if (name in mocks) return mocks[name];
+      // Unmocked relative imports are pure modules — load them for real.
+      if (name.startsWith('.')) return load(path.posix.join(path.posix.dirname(file), name) + '.ts', {}, globals);
+      throw new Error(`Missing mock: ${name}`);
+    },
     exports, ...Object.values(globals),
   );
   return exports;

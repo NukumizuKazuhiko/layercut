@@ -1,7 +1,8 @@
 import { create } from "zustand";
-import type { CanvasSettings, Layer, PreviewMode, ProjectSnapshot } from "./layerTypes";
+import type { CanvasSettings, DocumentSnapshot, Layer, PreviewMode, ProjectSnapshot } from "./layerTypes";
 import { duplicateLayer, validSelection } from "./layerUtils";
 import { uid } from "../utils/id";
+import { isHexColor } from "../utils/color";
 import {
   DEFAULT_SHAPE_STYLE,
   DEFAULT_SIDES,
@@ -92,7 +93,7 @@ interface EditorState extends ProjectSnapshot {
 
   // layers (commit = push an undo step; false = transient, e.g. mid-drag)
   addLayers: (layers: Layer[], select?: boolean) => void;
-  replaceAllLayers: (expected: { layers: Layer[]; canvas: CanvasSettings; historyVersion: number; documentEpoch: number }, layer: Layer) => boolean;
+  replaceAllLayers: (expected: DocumentSnapshot, layer: Layer) => boolean;
   addEmptyLayer: (name?: string) => void;
   deleteSelected: () => void;
   duplicateSelected: () => void;
@@ -138,11 +139,9 @@ export function hasPendingTransaction(): boolean {
 // Shape tool input validation. Tool settings are user input that ends up inside
 // generated SVG markup, so colours are re-checked here before they are stored.
 // ---------------------------------------------------------------------------
-const HEX_COLOR = /^#[0-9a-f]{6}$/i;
-
 function safeColor(value: string | null): string | null {
   if (value === null) return null;
-  return HEX_COLOR.test(value) ? value.toLowerCase() : null;
+  return isHexColor(value) ? value.toLowerCase() : null;
 }
 
 function safeStrokeWidth(value: number): number {
@@ -343,7 +342,7 @@ export const useEditorStore = create<EditorState>((set, get) => {
       commit ? commitSet(apply) : liveSet(apply);
     },
     setSvgPaintColor: (id, channel, color) => {
-      if (color !== null && !/^#[0-9a-f]{6}$/i.test(color)) return;
+      if (color !== null && !isHexColor(color)) return;
       commitSet((s) => ({
         layers: s.layers.map((layer) => layer.id === id && layer.type === "svg" && !layer.locked
           ? { ...layer, [channel]: color }

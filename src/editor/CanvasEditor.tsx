@@ -12,7 +12,8 @@ import { useViewportStore } from "./ViewportManager";
 import { SelectionTransformer, collectSnapTargets, snapAABB } from "./TransformManager";
 import { importFiles } from "../import/importFiles";
 import { computeOcclusion, type OcclusionResult } from "../occlusion/OcclusionEngine";
-import { paintedAsset, paintedAssetsForLayers } from "../vector/svgPaint";
+import { paintedAssetsForLayers } from "../vector/svgPaint";
+import { usePaintedAsset } from "../vector/usePaintedAsset";
 import { isShapeTool, type ShapeKind } from "../shapes/shapeTypes";
 import { SHAPE_NAME_KEY } from "../shapes/shapeLabels";
 import { useShapeGesture } from "./useShapeGesture";
@@ -50,16 +51,7 @@ function LayerNode({
   onNodeChange: () => void;
 }) {
   const interactive = useEditorStore((s) => s.previewMode === "normal" && s.activeTool === "select");
-  const [renderAsset, setRenderAsset] = useState<LayerAsset | null>(asset);
-  useEffect(() => {
-    let active = true;
-    if (!asset) { setRenderAsset(null); return; }
-    setRenderAsset(asset.kind === "svg" && (layer.svgFillColor || layer.svgStrokeColor) ? null : asset);
-    paintedAsset(asset, layer).then((painted) => {
-      if (active) setRenderAsset(painted);
-    }).catch((error) => console.error("SVG paint preview failed", error));
-    return () => { active = false; };
-  }, [asset, layer.svgFillColor, layer.svgStrokeColor]);
+  const renderAsset = usePaintedAsset(asset, layer);
   const registerNode = useCallback((node: Konva.Image | null) => {
     if (nodeRefs.current[layer.id] === node) return;
     nodeRefs.current[layer.id] = node;

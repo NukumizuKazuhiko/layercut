@@ -14,10 +14,12 @@ import {
   SIDES_MAX,
   SIDES_MIN,
   STAR_INNER_RATIO,
+  type Drag,
   type Point,
   type ShapeKind,
   type ShapeStyle,
 } from "./shapeTypes";
+import { isHexColor } from "../utils/color";
 
 export interface ShapeGeometry {
   /** SVG path data in local coordinates; origin = top-left of the padded box */
@@ -33,11 +35,9 @@ export interface ShapeGeometry {
   center: Point;
 }
 
-const HEX = /^#[0-9a-f]{6}$/i;
-
 /** Attribute-safe colour: anything unexpected degrades to "none". */
 function color(value: string | null): string {
-  return value && HEX.test(value) ? value.toLowerCase() : "none";
+  return value && isHexColor(value) ? value.toLowerCase() : "none";
 }
 
 export interface ResolvedShapeStyle {
@@ -60,7 +60,7 @@ export function resolveShapeStyle(kind: ShapeKind, style: ShapeStyle): ResolvedS
 }
 
 /** Compact number formatting (max 3 decimals, no "-0"). */
-function n(value: number): string {
+function fmtNum(value: number): string {
   const rounded = Math.round(value * 1000) / 1000;
   return String(Object.is(rounded, -0) ? 0 : rounded);
 }
@@ -72,8 +72,8 @@ function clampSides(sides: number | undefined): number {
 
 function moveTo(points: Point[], close: boolean): string {
   const [first, ...rest] = points;
-  const parts = [`M ${n(first.x)},${n(first.y)}`];
-  for (const p of rest) parts.push(`L ${n(p.x)},${n(p.y)}`);
+  const parts = [`M ${fmtNum(first.x)},${fmtNum(first.y)}`];
+  for (const p of rest) parts.push(`L ${fmtNum(p.x)},${fmtNum(p.y)}`);
   if (close) parts.push("Z");
   return parts.join(" ");
 }
@@ -120,13 +120,13 @@ function pathData(
 
   switch (kind) {
     case "rect":
-      return `M ${n(x0)},${n(y0)} H ${n(x1)} V ${n(y1)} H ${n(x0)} Z`;
+      return `M ${fmtNum(x0)},${fmtNum(y0)} H ${fmtNum(x1)} V ${fmtNum(y1)} H ${fmtNum(x0)} Z`;
     case "ellipse":
       // two half arcs; the large-arc/sweep flags are independent of direction
       return (
-        `M ${n(cx - rx)},${n(cy)} ` +
-        `A ${n(rx)},${n(ry)} 0 1 0 ${n(cx + rx)},${n(cy)} ` +
-        `A ${n(rx)},${n(ry)} 0 1 0 ${n(cx - rx)},${n(cy)} Z`
+        `M ${fmtNum(cx - rx)},${fmtNum(cy)} ` +
+        `A ${fmtNum(rx)},${fmtNum(ry)} 0 1 0 ${fmtNum(cx + rx)},${fmtNum(cy)} ` +
+        `A ${fmtNum(rx)},${fmtNum(ry)} 0 1 0 ${fmtNum(cx - rx)},${fmtNum(cy)} Z`
       );
     case "line":
       return moveTo([from, to], false);
@@ -170,11 +170,11 @@ export function shapeGeometry(opts: {
   const strokeAttrs =
     stroke === "none"
       ? ""
-      : ` stroke="${stroke}" stroke-width="${n(strokeWidth)}" stroke-linejoin="round"` +
+      : ` stroke="${stroke}" stroke-width="${fmtNum(strokeWidth)}" stroke-linejoin="round"` +
         (kind === "line" ? ' stroke-linecap="round"' : "");
   const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${n(totalWidth)}" height="${n(totalHeight)}" ` +
-    `viewBox="0 0 ${n(totalWidth)} ${n(totalHeight)}">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${fmtNum(totalWidth)}" height="${fmtNum(totalHeight)}" ` +
+    `viewBox="0 0 ${fmtNum(totalWidth)} ${fmtNum(totalHeight)}">` +
     `<path d="${d}" fill="${fill}"${strokeAttrs}/></svg>`;
 
   return {
@@ -196,7 +196,7 @@ export function isClickDrag(from: Point, to: Point): boolean {
 export function defaultDrag(
   center: Point,
   size = CLICK_SHAPE_SIZE
-): { from: Point; to: Point } {
+): Drag {
   const half = size / 2;
   return {
     from: { x: center.x - half, y: center.y - half },
@@ -212,7 +212,7 @@ export function constrainDrag(
   from: Point,
   to: Point,
   opts: { square?: boolean; fromCenter?: boolean } = {}
-): { from: Point; to: Point } {
+): Drag {
   const { square = false, fromCenter = false } = opts;
   if (!square && !fromCenter) return { from, to };
   const sign = (v: number) => (v < 0 ? -1 : 1);

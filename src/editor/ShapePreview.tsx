@@ -6,12 +6,7 @@
  */
 import { Path } from "react-konva";
 import { resolveShapeStyle, shapeGeometry } from "../shapes/shapeGeometry";
-import type { Point, ShapeKind, ShapeStyle } from "../shapes/shapeTypes";
-
-export interface ShapeDrag {
-  from: Point;
-  to: Point;
-}
+import type { Drag, ShapeKind, ShapeStyle } from "../shapes/shapeTypes";
 
 export function ShapePreview({
   kind,
@@ -20,7 +15,7 @@ export function ShapePreview({
   sides,
 }: {
   kind: ShapeKind;
-  drag: ShapeDrag;
+  drag: Drag;
   style: ShapeStyle;
   sides: number;
 }) {

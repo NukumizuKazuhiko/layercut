@@ -12,6 +12,7 @@ import {
   SHAPE_KINDS,
   SIDES_MAX,
   SIDES_MIN,
+  TOOL_SHORTCUT,
   isShapeTool,
   type EditorTool,
 } from "../shapes/shapeTypes";
@@ -32,16 +33,6 @@ const TOOL_ICON: Record<EditorTool, ComponentType<{ size?: number }>> = {
   line: LineIcon,
   polygon: PolygonIcon,
   star: StarIcon,
-};
-
-/** Single-key shortcuts, mirrored by useKeyboard. */
-export const TOOL_SHORTCUT: Record<EditorTool, string> = {
-  select: "V",
-  rect: "R",
-  ellipse: "O",
-  line: "L",
-  polygon: "P",
-  star: "S",
 };
 
 const TOOLS: readonly EditorTool[] = ["select", ...SHAPE_KINDS];

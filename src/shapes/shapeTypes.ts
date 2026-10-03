@@ -18,6 +18,12 @@ export interface Point {
   y: number;
 }
 
+/** A drag gesture: start and current endpoint in canvas coordinates. */
+export interface Drag {
+  from: Point;
+  to: Point;
+}
+
 export interface ShapeStyle {
   /** `#rrggbb`, or null for no fill. Lines are never filled. */
   fill: string | null;
@@ -28,6 +34,23 @@ export interface ShapeStyle {
 }
 
 export const SHAPE_KINDS: readonly ShapeKind[] = ["rect", "ellipse", "line", "polygon", "star"];
+
+/** Single-key shortcuts (V/R/O/L/P/S) — one source for toolbar titles and useKeyboard. */
+export const TOOL_SHORTCUT: Record<EditorTool, string> = {
+  select: "V",
+  rect: "R",
+  ellipse: "O",
+  line: "L",
+  polygon: "P",
+  star: "S",
+};
+
+/** Inverse of TOOL_SHORTCUT for key handlers. */
+export const SHORTCUT_TOOL = Object.fromEntries(
+  (Object.keys(TOOL_SHORTCUT) as (keyof typeof TOOL_SHORTCUT)[]).map(
+    (tool) => [TOOL_SHORTCUT[tool].toLowerCase(), tool]
+  )
+) as Record<string, EditorTool>;
 
 export function isShapeTool(tool: EditorTool): tool is ShapeKind {
   return tool !== "select";

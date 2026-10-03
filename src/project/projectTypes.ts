@@ -1,4 +1,5 @@
 import type { CanvasSettings, Layer } from "../layers/layerTypes";
+import { isHexColor } from "../utils/color";
 import type { LayerAsset } from "../assets/assetStore";
 import type { ExportScope } from "../export/exportAll";
 
@@ -146,7 +147,7 @@ export function isValidProjectJson(value: unknown): value is SerializedProject {
     if (layer.occludesWhenHidden !== undefined && typeof layer.occludesWhenHidden !== "boolean") return false;
     for (const key of ["svgFillColor", "svgStrokeColor"]) {
       const color = layer[key];
-      if (color !== undefined && color !== null && (layer.type !== "svg" || typeof color !== "string" || !/^#[0-9a-f]{6}$/i.test(color))) return false;
+      if (color !== undefined && color !== null && (layer.type !== "svg" || typeof color !== "string" || !isHexColor(color))) return false;
     }
     const transform = layer.transform;
     if (!isRecord(transform) || !["x", "y", "scaleX", "scaleY", "rotation"].every(key => finite(transform[key]))) return false;

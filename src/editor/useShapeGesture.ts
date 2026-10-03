@@ -10,9 +10,8 @@ import { useEditorStore } from "../layers/layerStore";
 import { dropPointToCanvas } from "../import/importFiles";
 import { createShapeLayer } from "../shapes/createShape";
 import { constrainDrag, defaultDrag, isClickDrag } from "../shapes/shapeGeometry";
-import { isShapeTool, type Point, type ShapeKind } from "../shapes/shapeTypes";
+import { isShapeTool, type Drag, type Point, type ShapeKind } from "../shapes/shapeTypes";
 import { useViewportStore } from "./ViewportManager";
-import type { ShapeDrag } from "./ShapePreview";
 
 /** Drag coordinates are rounded so generated geometry keeps tidy numbers. */
 function roundPoint(p: Point): Point {
@@ -21,7 +20,7 @@ function roundPoint(p: Point): Point {
 
 export interface ShapeGesture {
   /** Non-null while a shape is being dragged (drives the live preview). */
-  drag: ShapeDrag | null;
+  drag: Drag | null;
   /** Returns true when the event started a shape drag and must not pan. */
   startDraw: (e: React.MouseEvent) => boolean;
 }
@@ -36,16 +35,16 @@ export function useShapeGesture({
   /** localized text shown when a shape cannot be built */
   failureNotice: string;
 }): ShapeGesture {
-  const [drag, setDrag] = useState<ShapeDrag | null>(null);
+  const [drag, setDrag] = useState<Drag | null>(null);
   // kept in a ref as well so the mouseup handler reads the final geometry
   // without re-subscribing to every pointer move
-  const pending = useRef<ShapeDrag | null>(null);
+  const pending = useRef<Drag | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
   useEffect(() => () => cleanupRef.current?.(), []);
 
   const commit = useCallback(
-    (kind: ShapeKind, gesture: ShapeDrag) => {
+    (kind: ShapeKind, gesture: Drag) => {
       const { shapeStyle, shapeSides, layers } = useEditorStore.getState();
       void createShapeLayer({
         kind,
@@ -77,12 +76,12 @@ export function useShapeGesture({
       const origin = dropPointToCanvas(e.clientX, e.clientY, rect, viewport);
 
       /** Apply the live modifier keys to a raw pointer position. */
-      const apply = (p: Point, shift: boolean, alt: boolean): ShapeDrag => {
+      const apply = (p: Point, shift: boolean, alt: boolean): Drag => {
         const c = constrainDrag(origin, p, { square: shift, fromCenter: alt });
         return { from: roundPoint(c.from), to: roundPoint(c.to) };
       };
 
-      const initial: ShapeDrag = { from: roundPoint(origin), to: roundPoint(origin) };
+      const initial: Drag = { from: roundPoint(origin), to: roundPoint(origin) };
       pending.current = initial;
       setDrag(initial);
 
@@ -102,7 +101,7 @@ export function useShapeGesture({
       };
 
       /** Commit the gesture: one added layer, or nothing when cancelled. */
-      const finish = (gesture: ShapeDrag) => {
+      const finish = (gesture: Drag) => {
         cleanup();
         pending.current = null;
         setDrag(null);

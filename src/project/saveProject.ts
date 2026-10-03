@@ -8,6 +8,7 @@ import { useAssetStore } from "../assets/assetStore";
 import { useEditorStore } from "../layers/layerStore";
 import { useViewportStore } from "../editor/ViewportManager";
 import { sanitizeFileName } from "../layers/layerUtils";
+import { isHexColor } from "../utils/color";
 import { addRecent } from "./storage";
 import {
   PROJECT_EXT,
@@ -99,8 +100,8 @@ export async function loadProjectJson(json: string, name?: string): Promise<void
       locked: l.locked === true,
       aspectLocked: l.aspectLocked === true,
       occludesWhenHidden: l.occludesWhenHidden === true,
-      svgFillColor: l.type === "svg" && /^#[0-9a-f]{6}$/i.test(l.svgFillColor ?? "") ? l.svgFillColor : null,
-      svgStrokeColor: l.type === "svg" && /^#[0-9a-f]{6}$/i.test(l.svgStrokeColor ?? "") ? l.svgStrokeColor : null,
+      svgFillColor: l.type === "svg" && typeof l.svgFillColor === "string" && isHexColor(l.svgFillColor) ? l.svgFillColor : null,
+      svgStrokeColor: l.type === "svg" && typeof l.svgStrokeColor === "string" && isHexColor(l.svgStrokeColor) ? l.svgStrokeColor : null,
       assetId: l.assetId ? idMap.get(l.assetId) ?? null : null,
       transform: {
         x: finiteOr(l.transform.x, 0),

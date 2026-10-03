@@ -48,4 +48,16 @@ export interface ProjectSnapshot {
   selectedIds: string[];
 }
 
+/**
+ * What a whole-document mutation expects; the mutation applies only if the
+ * current state still matches every field (no concurrent edit, history or
+ * epoch change happened while the replacement was being prepared).
+ */
+export interface DocumentSnapshot {
+  layers: Layer[];
+  canvas: CanvasSettings;
+  historyVersion: number;
+  documentEpoch: number;
+}
+
 export type PreviewMode = "normal" | "occlusion";

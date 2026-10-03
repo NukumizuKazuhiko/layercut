@@ -1,17 +1,7 @@
 import { useEffect } from "react";
 import { hasPendingTransaction, useEditorStore } from "../layers/layerStore";
 import { useViewportStore } from "./ViewportManager";
-import { isShapeTool, type EditorTool } from "../shapes/shapeTypes";
-
-/** Single-key drawing-tool shortcuts (V/R/O/L/P/S); the toolbar shows the same set. */
-const TOOL_KEYS: Record<string, EditorTool> = {
-  v: "select",
-  r: "rect",
-  o: "ellipse",
-  l: "line",
-  p: "polygon",
-  s: "star",
-};
+import { SHORTCUT_TOOL, isShapeTool } from "../shapes/shapeTypes";
 
 /** Input types that consume typing keys — everything else (range, color…) lets shortcuts through. */
 const TYPING_INPUT_TYPES = new Set([
@@ -97,11 +87,11 @@ export function useKeyboard() {
         else s.clearSelection();
         return;
       }
-      if (!mod && !e.altKey && TOOL_KEYS[key]) {
+      if (!mod && !e.altKey && SHORTCUT_TOOL[key]) {
         // Keep the shortcuts out of the way while a gesture transaction is open.
         if (!hasPendingTransaction()) {
           e.preventDefault();
-          s.setActiveTool(TOOL_KEYS[key]);
+          s.setActiveTool(SHORTCUT_TOOL[key]);
         }
         return;
       }
