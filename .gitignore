@@ -1,6 +1,7 @@
 # dependencies / builds
 node_modules/
 dist/
+*.tsbuildinfo
 
 # tauri / rust
 src-tauri/target/

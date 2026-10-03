@@ -6,11 +6,14 @@ import { readExportConfig } from "./exportConfig";
 import { writeAutosave } from "./storage";
 
 const AUTOSAVE_DEBOUNCE_MS = 1500;
+/** Periodic retry for a failed write while the app sits idle. */
+const AUTOSAVE_RETRY_MS = 10000;
 
 /** One writer consumes the latest document snapshot; failed writes stay retryable. */
 export function useAutosave() {
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
     let running = false;
     let ready = false;
     let pending: ReturnType<typeof capture> | null = null;
@@ -38,10 +41,17 @@ export function useAutosave() {
             await writeAutosave({ savedAt: Date.now(), name: state.projectName, json: JSON.stringify(project) });
             lastSavedKey = snapshot.key;
           } catch (error) {
-            // Keep the newest snapshot. A later edit, visibility event or cleanup retries it.
+            // Keep the newest snapshot. A later edit, visibility event, retry
+            // timer or cleanup retries it.
             pending ??= snapshot;
             ready = false;
             console.warn("autosave failed", error);
+            if (!retryTimer) {
+              retryTimer = setTimeout(() => {
+                retryTimer = null;
+                flush();
+              }, AUTOSAVE_RETRY_MS);
+            }
             break;
           }
         }
@@ -76,6 +86,7 @@ export function useAutosave() {
       unsub();
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", flush);
+      if (retryTimer) clearTimeout(retryTimer);
       // React cleanup starts the queued write instead of discarding its timer.
       flush();
     };

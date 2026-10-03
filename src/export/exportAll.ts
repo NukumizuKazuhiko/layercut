@@ -113,8 +113,10 @@ async function exportVectorLayers(
   const assets = useAssetStore.getState().assets;
 
   const visible = layers.map((layer, index) => ({ layer, index })).filter(({ layer }) => layer.visible);
-  if (layers.some((layer) => isLayerOccluder(layer) && layer.type !== "svg")) {
-    throw new Error("svg_needs_all_svg"); // a PNG layer exists (§7.3)
+  // An empty layer has no content: it outputs nothing and rasterizes to no
+  // occlusion, so it must not veto SVG export (the vector engine skips it too).
+  if (layers.some((layer) => layer.type !== "empty" && isLayerOccluder(layer) && layer.type !== "svg")) {
+    throw new Error("svg_needs_all_svg"); // a non-empty PNG layer exists (§7.3)
   }
 
   for (const layer of layers.filter(isLayerOccluder)) {

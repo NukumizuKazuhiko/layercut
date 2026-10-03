@@ -5,7 +5,7 @@ const ts = require('typescript');
 const { execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 
-function harness(picker) {
+function harness(picker, layers = []) {
   let pickerCalls = 0, downloads = 0;
   global.window = picker ? { showDirectoryPicker: async function (options) {
     pickerCalls++;
@@ -23,11 +23,18 @@ function harness(picker) {
   const deps = {
     jszip: Zip,
     '../assets/assetStore': { useAssetStore: { getState: () => ({ assets: {} }) } },
-    '../layers/layerStore': { useEditorStore: { getState: () => ({ canvas: {}, layers: [], selectedIds: [] }) } },
-    '../layers/layerUtils': { validSelection: () => [] },
+    '../layers/layerStore': { useEditorStore: { getState: () => ({ canvas: {}, layers, selectedIds: [] }) } },
+    '../layers/layerUtils': {
+      validSelection: () => [],
+      isLayerOccluder: l => l.visible || l.occludesWhenHidden === true,
+    },
     './exportPNG': { canvasToBlob: async () => blob, rasterizeComposite: () => ({}) },
-    './naming': { compositeName: () => 'composite.png' },
-    '../vector/svgSafety': {}, '../vector/svgBoolean': {},
+    './naming': { compositeName: () => 'composite.png', exportName: (i, name) => `Layer${i}_${name}.svg` },
+    '../vector/svgSafety': { analyzeSvgSafety: () => ({ safe: true }) },
+    '../vector/svgBoolean': {
+      // Gate tests only care about reaching the vector engine, not its result.
+      computeVectorOcclusion: ls => ({ byLayerId: new Map(ls.map(l => [l.id, '<svg/>'])) }),
+    },
     // Layers carry per-layer paint overrides in the real pipeline; these tests
     // only cover the save destination, so paint resolution is an identity pass.
     '../vector/svgPaint': { paintedAssetsForLayers: async (_layers, assets) => assets },
@@ -45,6 +52,7 @@ function harness(picker) {
   }, module, module.exports);
   return {
     export: destination => module.exports.exportLayers('composite', 1, 'png', undefined, destination),
+    exportSvg: destination => module.exports.exportLayers('all', 1, 'svg', undefined, destination),
     counts: () => ({ pickerCalls, downloads }),
     dispose: () => { global.setTimeout = originalTimeout; },
   };
@@ -73,6 +81,24 @@ async function main() {
         write: async data => { assert(data instanceof Blob); writes++; }, close: async () => { closes++; },
       }) }) }));
       try { assert.equal(await h.export('folder'), 'folder'); assert.equal(writes, 1); assert.equal(closes, 1); }
+      finally { h.dispose(); }
+    }],
+    ['a hidden empty layer does not veto SVG export', async () => {
+      const layers = [
+        { id: 'empty', type: 'empty', assetId: null, visible: false, occludesWhenHidden: true },
+        { id: 'svg1', type: 'svg', assetId: null, visible: true, occludesWhenHidden: false },
+      ];
+      const h = harness(undefined, layers);
+      try { assert.equal(await h.exportSvg('zip'), 'zip'); assert.equal(h.counts().downloads, 1); }
+      finally { h.dispose(); }
+    }],
+    ['a hidden non-empty PNG occluder still vetoes SVG export', async () => {
+      const layers = [
+        { id: 'png', type: 'png', assetId: null, visible: false, occludesWhenHidden: true },
+        { id: 'svg1', type: 'svg', assetId: null, visible: true, occludesWhenHidden: false },
+      ];
+      const h = harness(undefined, layers);
+      try { await assert.rejects(h.exportSvg('zip'), { message: 'svg_needs_all_svg' }); }
       finally { h.dispose(); }
     }],
   ];

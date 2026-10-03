@@ -26,15 +26,18 @@ export async function saveProjectAs(rawName: string): Promise<boolean> {
   const documentEpoch = s.documentEpoch;
   const assets = useAssetStore.getState().assets;
   const exportConfig = readExportConfig();
-  const project = await serializeProject(name, s.canvas, s.layers, assets, exportConfig);
-  const json = JSON.stringify(project);
 
   const filename = `${sanitizeFileName(name)}${PROJECT_EXT}`;
+  let json: string;
   if (isTauri()) {
+    // Show the native dialog before serializing: embedding every PNG asset
+    // can take seconds, and the dialog must not wait on that work.
     const path = await save({ defaultPath: filename, filters: [{ name: "LayerCut", extensions: ["layercut"] }] });
     if (path === null) return false;
+    json = JSON.stringify(await serializeProject(name, s.canvas, s.layers, assets, exportConfig));
     await writeTextFile(path, json);
   } else {
+    json = JSON.stringify(await serializeProject(name, s.canvas, s.layers, assets, exportConfig));
     downloadBlob(new Blob([json], { type: "application/json" }), filename);
   }
 

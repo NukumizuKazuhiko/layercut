@@ -5,6 +5,21 @@ import { useEditorStore } from "../layers/layerStore";
 import { validSelection } from "../layers/layerUtils";
 import type { AABB } from "../utils/geometry";
 
+// Konva's keepRatio only applies to corner anchors; side anchors stretch a
+// single axis. While the aspect lock is on, hide side anchors so a drag can
+// never break the ratio.
+const ALL_ANCHORS = [
+  "top-left",
+  "top-center",
+  "top-right",
+  "middle-left",
+  "middle-right",
+  "bottom-left",
+  "bottom-center",
+  "bottom-right",
+];
+const CORNER_ANCHORS = ["top-left", "top-right", "bottom-left", "bottom-right"];
+
 /**
  * Attaches a Konva Transformer to the current selection (visible + unlocked),
  * and writes node attrs back into the store as one undoable transaction.
@@ -47,6 +62,7 @@ export function SelectionTransformer({
       ref={trRef}
       rotateEnabled
       keepRatio={keepRatio}
+      enabledAnchors={keepRatio ? CORNER_ANCHORS : ALL_ANCHORS}
       shiftBehavior="none"
       anchorSize={9}
       anchorCornerRadius={2}
